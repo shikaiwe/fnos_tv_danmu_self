@@ -46,6 +46,10 @@ jobs:
             echo "RELEASE_KEY_PASSWORD=$KEY_PASSWORD"
           } > local.properties
 
+      # 保险：防止 Windows 环境提交时丢失 gradlew 可执行位
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Build release APK
         run: ./gradlew assembleRelease --no-daemon
 
