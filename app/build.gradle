@@ -3,27 +3,78 @@ plugins {
     id 'com.android.application'
 }
 
+// 读取 local.properties 获取 NDK 版本
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProps.load(new FileInputStream(localPropsFile))
+}
+
 android {
-    compileSdkVersion 33
+    namespace 'com.fntv.app'
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "com.fntv.app"
-        minSdkVersion 19
-        targetSdkVersion 32
-        versionCode 21
-        versionName "1.2.1"
+        minSdkVersion 26        // libmpv AAR 硬编码 minSdkVersion=26，必须提升
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
+        buildConfigField "int", "VERSION_CODE", "1"
+        buildConfigField "String", "VERSION_NAME", '"1.0"'
+
+        // NDK 配置：支持 armeabi-v7a 和 arm64-v8a
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a"
+        }
     }
 
-    dexOptions {
-        preDexLibraries false
-        javaMaxHeapSize "2g"
-    }
+    // 说明：ABI 由 defaultConfig.ndk.abiFilters 统一控制，输出单个双 ABI APK
+    // （不使用 splits.abi，因为 outputFileName 不含 ABI 标识会导致产物同名冲突）
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // NDK 路径配置（通过 local.properties）
+    def ndkVer = localProps.getProperty("ndk.version", "25.2.9519653")
+    ndkVersion = ndkVer
+
+    // 本地/CI 均从 local.properties 读取签名信息；未配置时跳过签名（debug 走默认签名）
+    def hasReleaseSigning = localPropsFile.exists() && localProps.getProperty("RELEASE_STORE_FILE") != null
+
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile rootProject.file(localProps.getProperty("RELEASE_STORE_FILE"))
+                storePassword localProps.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias localProps.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword localProps.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+        debug {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 
     applicationVariants.all { variant ->
@@ -39,6 +90,7 @@ static def generateTime() {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'com.squareup.retrofit2:retrofit:2.6.4'
@@ -46,8 +98,10 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.18.7'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.18.7'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.7'
-    implementation 'org.jellyfin.exoplayer:exoplayer-ffmpeg-extension:2.18.7+1'
+
+    // ===== mpv-android 播放引擎（唯一播放内核） =====
+    // Maven Central: dev.jdtech.mpv:libmpv
+    // AAR 内含 4 ABI 的 libmpv.so / libplayer.so / FFmpeg 系列 .so
+    // 注意：AAR manifest 声明 minSdkVersion=26，故本项目 minSdk 已提升至 26
+    implementation 'dev.jdtech.mpv:libmpv:0.5.1'
 }

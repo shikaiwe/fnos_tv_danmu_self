@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格 SeekBar Thumb — 圆形珊瑚粉 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#FF81C784" />
-            <stroke android:width="2dp" android:color="#FF81C784" />
-            <size android:width="10dp" android:height="18dp" />
-            <corners android:radius="2dp" />
+        <shape android:shape="oval">
+            <solid android:color="@color/accent_light" />
+            <stroke android:width="2dp" android:color="@color/colorAccent" />
+            <size android:width="18dp" android:height="18dp" />
         </shape>
     </item>
     <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#FFFFFF" />
-            <size android:width="8dp" android:height="16dp" />
-            <corners android:radius="1dp" />
+        <shape android:shape="oval">
+            <solid android:color="@color/text_white" />
+            <size android:width="14dp" android:height="14dp" />
         </shape>
     </item>
 </selector>

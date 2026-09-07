@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 倍速选择面板 — Kazumi 风格 BottomSheet -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/bg_card_elevated"
+    android:orientation="vertical"
+    android:paddingTop="24dp"
+    android:paddingBottom="24dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="播放速度"
+        android:textColor="@color/colorAccent"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp"
+        android:gravity="center" />
+
+    <!-- 2行 × 4列 倍速网格 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button android:id="@+id/speed_05"  android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginRight="6dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="0.5x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_075" />
+
+        <Button android:id="@+id/speed_075" android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="3dp" android:layout_marginRight="3dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="0.75x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_10"
+            android:nextFocusLeft="@id/speed_05" />
+
+        <Button android:id="@+id/speed_10"  android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="3dp" android:layout_marginRight="3dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="1.0x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_125"
+            android:nextFocusLeft="@id/speed_075" />
+
+        <Button android:id="@+id/speed_125" android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="6dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="1.25x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusLeft="@id/speed_10" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button android:id="@+id/speed_15"  android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginRight="6dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="1.5x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_20" />
+
+        <Button android:id="@+id/speed_20" android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="3dp" android:layout_marginRight="3dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="2.0x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_30"
+            android:nextFocusLeft="@id/speed_15" />
+
+        <Button android:id="@+id/speed_30"  android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="3dp" android:layout_marginRight="3dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="3.0x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusRight="@id/speed_40"
+            android:nextFocusLeft="@id/speed_20" />
+
+        <Button android:id="@+id/speed_40"  android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:layout_marginLeft="6dp"
+            android:background="@drawable/bg_speed_item"
+            android:text="4.0x" android:textColor="@color/text_white"
+            android:textSize="15sp" android:focusable="true" android:nextFocusLeft="@id/speed_30" />
+    </LinearLayout>
+
+    <!-- 取消按钮 -->
+    <Button
+        android:id="@+id/dm_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_chip"
+        android:text="取消"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:focusable="true" />
+
+</LinearLayout>

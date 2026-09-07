@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 手势指示浮层：音量/亮度/进度提示 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_gesture_indicator"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:gravity="center">
+
+        <!-- 图标区域 -->
+        <TextView
+            android:id="@+id/gestureIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔊"
+            android:textSize="32sp"
+            android:layout_marginBottom="4dp" />
+
+        <!-- 百分比/时间文字 -->
+        <TextView
+            android:id="@+id/gestureValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50%"
+            android:textColor="@color/text_white"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+</FrameLayout>

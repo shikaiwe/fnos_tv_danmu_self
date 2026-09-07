@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设置项行背景 — 聚焦珊瑚粉边框，12dp 圆角 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/bg_input" />
+            <corners android:radius="12dp" />
+            <stroke android:width="2dp" android:color="@color/border_focused" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/bg_input" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>

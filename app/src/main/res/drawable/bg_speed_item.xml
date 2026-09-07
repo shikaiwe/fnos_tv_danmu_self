@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 倍速选项背景 — Kazumi 风格 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 当前倍速高亮: 珊瑚粉背景 + 白色文字 -->
+    <item android:state_focused="true" android:state_pressed="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#CCFB6F92" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#DDFB6F92" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <!-- 普通选项: 半透明背景 -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#33FFFFFF" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>

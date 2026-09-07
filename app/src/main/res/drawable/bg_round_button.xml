@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器圆形/圆角按钮背景 — 聚焦时珊瑚粉边框 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="oval">
+            <solid android:color="#CC1E1E1E" />
+            <stroke android:width="2dp" android:color="@color/focus_highlight" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#991E1E1E" />
+        </shape>
+    </item>
+</selector>

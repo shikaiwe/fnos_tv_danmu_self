@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 弹幕设置对话框 — Kazumi 风格 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#FF1A1A1A">
+    android:background="@color/bg_card_elevated">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
+        <!-- 标题: 20sp, 珊瑚粉强调 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="弹幕设置"
-            android:textColor="#FFF"
-            android:textSize="18sp"
+            android:textColor="@color/colorAccent"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:paddingBottom="12dp" />
+            android:paddingBottom="16dp" />
 
+        <!-- 弹幕开关行 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -30,7 +33,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="弹幕开关"
-                android:textColor="#EEE" />
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
 
             <Switch
                 android:id="@+id/dm_sw"
@@ -46,14 +50,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="4dp">
+            android:paddingTop="8dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="  滚动弹幕"
-                android:textColor="#CCC"
+                android:text="滚动弹幕"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
             <Switch
@@ -69,14 +73,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="4dp">
+            android:paddingTop="8dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="  顶部弹幕"
-                android:textColor="#CCC"
+                android:text="顶部弹幕"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
             <Switch
@@ -92,14 +96,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="4dp">
+            android:paddingTop="8dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="  底部弹幕"
-                android:textColor="#CCC"
+                android:text="底部弹幕"
+                android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
             <Switch
@@ -115,15 +119,16 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="时间比例缩放"
-                android:textColor="#EEE" />
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
 
             <Switch
                 android:id="@+id/dm_time_scale"
@@ -133,50 +138,58 @@
 
         </LinearLayout>
 
+        <!-- 分割线 -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#333"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
+            android:background="@color/divider"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="12dp" />
 
+        <!-- 操作按钮 -->
         <Button
             android:id="@+id/dm_matchBtn"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="44dp"
             android:background="@drawable/bg_chip"
             android:text="手动匹配弹幕"
-            android:textColor="#FFF"
-            android:focusable="true" />
+            android:textColor="@color/text_white"
+            android:focusable="true"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/dm_listBtn"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="44dp"
             android:background="@drawable/bg_chip"
             android:text="弹幕列表"
-            android:textColor="#FFF"
+            android:textColor="@color/text_white"
             android:focusable="true"
+            android:textSize="14sp"
             android:layout_marginTop="8dp" />
 
+        <!-- 分割线 -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#333"
-            android:layout_marginTop="8dp"
+            android:background="@color/divider"
+            android:layout_marginTop="12dp"
             android:layout_marginBottom="8dp" />
 
+        <!-- 滑块设置项 -->
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_area" />
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_speed" />
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_opacity" />
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_fontsize" />
 
+        <!-- 文字描边 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="文字描边"
-            android:textColor="#EEE"
-            android:paddingTop="8dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:paddingTop="12dp"
             android:paddingBottom="4dp"
             android:focusable="true"
             android:nextFocusDown="@+id/dm_outline" />
@@ -198,12 +211,14 @@
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_offset" />
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_maxcomments" />
 
+        <!-- 自定义刷新率 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="自定义刷新率"
-            android:textColor="#EEE"
-            android:paddingTop="4dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:paddingTop="8dp"
             android:paddingBottom="4dp"
             android:focusable="true"
             android:nextFocusDown="@+id/dm_custom_fps" />
@@ -221,34 +236,37 @@
 
         <include layout="@layout/item_danmu_slider" android:id="@+id/dm_fps" />
 
+        <!-- 确定/取消按钮 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingTop="12dp">
+            android:paddingTop="16dp">
 
             <Button
                 android:id="@+id/dm_cancel"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:layout_marginRight="6dp"
                 android:background="@drawable/bg_chip"
                 android:text="取消"
-                android:textColor="#999"
-                android:focusable="true" />
+                android:textColor="@color/text_secondary"
+                android:focusable="true"
+                android:textSize="14sp" />
 
             <Button
                 android:id="@+id/dm_ok"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:layout_marginLeft="6dp"
                 android:background="@drawable/bg_chip"
                 android:text="确定"
-                android:textColor="#FFF"
-                android:focusable="true" />
+                android:textColor="@color/text_white"
+                android:focusable="true"
+                android:textSize="14sp" />
 
         </LinearLayout>
 

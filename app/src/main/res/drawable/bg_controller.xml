@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格控制器渐变背景 — 透明 → 深色 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
-        android:startColor="#00000000"
-        android:endColor="#CC000000"
+        android:startColor="#000F0F0F"
+        android:endColor="#E60F0F0F"
         android:angle="270" />
 </shape>

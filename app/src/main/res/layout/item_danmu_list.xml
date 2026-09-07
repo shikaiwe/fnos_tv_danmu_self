@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 弹幕列表项 — Kazumi 风格 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -11,28 +12,31 @@
     android:nextFocusDown="@id/dm_list_view"
     android:background="?android:attr/selectableItemBackground">
 
+    <!-- 时间: 柔和色 -->
     <TextView
         android:id="@+id/dm_time"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
-        android:textColor="#AAA"
+        android:textColor="@color/text_hint"
         android:textSize="13sp"
         android:singleLine="true" />
 
+    <!-- 类型: 更淡 -->
     <TextView
         android:id="@+id/dm_type"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:textColor="#888"
+        android:textColor="@color/text_hint"
         android:textSize="12sp"
         android:singleLine="true" />
 
+    <!-- 内容: 主文字色 -->
     <TextView
         android:id="@+id/dm_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="#EEE"
+        android:textColor="@color/text_primary"
         android:textSize="13sp"
         android:maxLines="2"
         android:ellipsize="end" />

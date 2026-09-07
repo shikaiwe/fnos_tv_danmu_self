@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!--
-    深灰色主题，无 ActionBar。
+    Kazumi 风格深色主题，无 ActionBar。
     使用 Theme.AppCompat.NoActionBar 作为父主题，
     兼容 Android 4.4 (API 19)。
     -->
     <style name="Theme.FntvApp" parent="Theme.AppCompat.NoActionBar">
-        <!-- 主色 -->
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <!-- 主色：Kazumi 珊瑚粉 -->
+        <item name="colorPrimary">@color/accent_primary_btn</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
@@ -20,10 +20,24 @@
 
     <!-- 深色对话框主题 -->
     <style name="DarkDialog" parent="Theme.AppCompat.Dialog">
-        <item name="android:windowBackground">@color/bg_card</item>
+        <item name="android:windowBackground">@color/bg_card_elevated</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
     </style>
 
     <!-- 遥控器焦点高亮：配合 ?attr/selectableItemBackground 默认有涟漪/高亮 -->
+
+    <!-- 右侧抽屉式二级菜单窗口：透明背景 + 半屏压暗 + 从右滑入 -->
+    <style name="SideDrawerDialog" parent="android:Theme.DeviceDefault.Dialog.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.45</item>
+        <item name="android:windowAnimationStyle">@style/SideDrawerAnim</item>
+    </style>
+
+    <style name="SideDrawerAnim">
+        <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_right</item>
+    </style>
 </resources>

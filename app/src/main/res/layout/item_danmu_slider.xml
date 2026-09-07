@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 弹幕滑块设置项 — Kazumi 风格 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
+    <!-- 标签文字: 13sp, 柔和色 -->
     <TextView
         android:id="@+id/dm_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=""
-        android:textColor="#AAA"
-        android:textSize="12sp"
-        android:paddingBottom="2dp" />
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:paddingBottom="4dp" />
 
+    <!-- SeekBar: 使用珊瑚粉进度 -->
     <SeekBar
         android:id="@+id/dm_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="100"
         android:progress="50"
-        android:focusable="true" />
+        android:focusable="true"
+        android:progressDrawable="@drawable/seeker_progress"
+        android:thumb="@drawable/seeker_thumb" />
 
 </LinearLayout>

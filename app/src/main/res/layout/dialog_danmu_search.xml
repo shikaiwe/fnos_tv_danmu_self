@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 弹幕搜索对话框 — Kazumi 风格 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#FF1A1A1A"
-    android:padding="16dp">
+    android:background="@color/bg_card_elevated"
+    android:padding="20dp">
 
+    <!-- 标题 -->
     <TextView
         android:id="@+id/dm_search_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="搜索弹幕"
-        android:textColor="#FFF"
-        android:textSize="18sp"
+        android:textColor="@color/colorAccent"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:paddingBottom="12dp" />
+        android:paddingBottom="16dp" />
 
+    <!-- 搜索栏: 胶囊形 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,35 +28,36 @@
         <EditText
             android:id="@+id/dm_search_input"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_input"
+            android:background="@drawable/bg_search_bar"
             android:hint="番剧名"
-            android:textColorHint="#666"
-            android:textColor="#EEE"
+            android:textColorHint="@color/text_hint"
+            android:textColor="@color/text_primary"
             android:textSize="15sp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp" />
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp" />
 
         <Button
             android:id="@+id/dm_search_btn"
             android:layout_width="wrap_content"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_marginLeft="8dp"
             android:background="@drawable/bg_btn_primary"
             android:text="搜索"
-            android:textColor="#FFF"
+            android:textColor="@color/text_white"
             android:textSize="14sp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:focusable="true" />
     </LinearLayout>
 
+    <!-- 搜索结果 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="12dp">
 
         <LinearLayout
             android:id="@+id/dm_search_results"
@@ -62,14 +66,15 @@
             android:orientation="vertical" />
     </ScrollView>
 
+    <!-- 取消按钮 -->
     <Button
         android:id="@+id/dm_search_cancel"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
         android:background="@drawable/bg_chip"
         android:text="取消"
-        android:textColor="#999"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp"
         android:focusable="true" />
 

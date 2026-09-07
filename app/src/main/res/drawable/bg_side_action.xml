@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 抽屉操作按钮（如"+ 字幕"）— 深色圆角 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#2E2A3440" />
+    <corners android:radius="14dp" />
+</shape>

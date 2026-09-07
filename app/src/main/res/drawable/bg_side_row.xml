@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 抽屉列表普通行 — 深色圆角卡片 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#26202733" />
+    <corners android:radius="14dp" />
+</shape>

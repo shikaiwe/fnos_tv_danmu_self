@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格媒体卡片 — 14dp 圆角，聚焦珊瑚粉边框 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/bg_card_focused" />
-            <corners android:radius="10dp" />
-            <stroke android:width="2dp" android:color="#FF3370FF" />
+            <solid android:color="@color/focus_bg" />
+            <corners android:radius="14dp" />
+            <stroke android:width="2dp" android:color="@color/focus_highlight" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/bg_card" />
-            <corners android:radius="10dp" />
-            <stroke android:width="1dp" android:color="#33FFFFFF" />
+            <corners android:radius="14dp" />
+            <stroke android:width="1dp" android:color="@color/border_light" />
         </shape>
     </item>
 </selector>

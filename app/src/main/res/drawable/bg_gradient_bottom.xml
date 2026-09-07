@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 播放器底部控制栏渐变背景 — 透明 → 深色（从顶到底） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:startColor="#000F0F0F"
+        android:endColor="#F00F0F0F"
+        android:angle="270" />
+</shape>

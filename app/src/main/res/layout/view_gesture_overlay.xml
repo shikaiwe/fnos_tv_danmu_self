@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  手势指示浮层 — 圆形进度环 + 图标 + 数值
+  根据手势类型动态调整位置与内容：
+    - 亮度：左侧中部，太阳图标
+    - 音量：右侧中部，喇叭图标
+    - 进度：跟随手指，时钟图标 + 时间差值
+    - 双击暂停：屏幕中央，播放/暂停图标
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 亮度指示器：左半屏居中 -->
+    <FrameLayout
+        android:id="@+id/gestureBrightness"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|start"
+        android:layout_marginStart="32dp"
+        android:visibility="gone">
+
+        <view class="com.fntv.app.GestureIndicatorView"
+            android:id="@+id/gestureRingBrightness"
+            android:layout_width="72dp"
+            android:layout_height="72dp" />
+
+        <TextView
+            android:id="@+id/gestureIconBrightness"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="☀️"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/gestureValueBrightness"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/text_white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- 音量指示器：右半屏居中 -->
+    <FrameLayout
+        android:id="@+id/gestureVolume"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="32dp"
+        android:visibility="gone">
+
+        <view class="com.fntv.app.GestureIndicatorView"
+            android:id="@+id/gestureRingVolume"
+            android:layout_width="72dp"
+            android:layout_height="72dp" />
+
+        <TextView
+            android:id="@+id/gestureIconVolume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="🔊"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/gestureValueVolume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/text_white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- 进度 Seek 指示器：跟随手指位置 -->
+    <FrameLayout
+        android:id="@+id/gestureSeek"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+
+        <view class="com.fntv.app.GestureIndicatorView"
+            android:id="@+id/gestureRingSeek"
+            android:layout_width="64dp"
+            android:layout_height="64dp" />
+
+        <TextView
+            android:id="@+id/gestureIconSeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="⏱️"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/gestureValueSeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="6dp"
+            android:textColor="@color/text_white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- 双击暂停指示器：屏幕正中 -->
+    <FrameLayout
+        android:id="@+id/gestureDoubleTap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/gestureIconDoubleTap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="▶️"
+            android:textSize="48sp" />
+    </FrameLayout>
+
+    <!-- 倍速提示：底部中央 -->
+    <TextView
+        android:id="@+id/tvSpeedHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/bg_danmu_status_hint"
+        android:paddingLeft="22dp"
+        android:paddingRight="22dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="倍速播放中"
+        android:textColor="@color/text_white"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+</FrameLayout>

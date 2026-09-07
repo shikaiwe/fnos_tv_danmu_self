@@ -1,11 +1,13 @@
 package com.fntv.app.util;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.LruCache;
 import android.util.Log;
 import android.widget.ImageView;
+import com.fntv.app.R;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import okhttp3.OkHttpClient;
@@ -30,7 +32,7 @@ public class SimpleImageLoader {
     public static void load(String url, ImageView view, OkHttpClient client) {
         if (url == null || url.isEmpty()) {
             view.setImageBitmap(null);
-            view.setBackgroundColor(0xFF333333);
+            view.setBackgroundColor(view.getContext().getColor(R.color.img_placeholder_dark));
             return;
         }
 
@@ -51,6 +53,7 @@ public class SimpleImageLoader {
     private static class ImageLoadTask extends AsyncTask<String, Void, Bitmap> {
         private final ImageView imageView;
         private final OkHttpClient client;
+        private String urlStr;
 
         ImageLoadTask(ImageView imageView, OkHttpClient client) {
             this.imageView = imageView;
@@ -59,7 +62,7 @@ public class SimpleImageLoader {
 
         @Override
         protected Bitmap doInBackground(String... params) {
-            String urlStr = params[0];
+            urlStr = params[0];
             try {
                 Request request = new Request.Builder()
                         .url(urlStr)
@@ -108,10 +111,13 @@ public class SimpleImageLoader {
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
+            // RecyclerView 复用期间 tag 已被换成其他 URL 时丢弃过期结果
+            Object tag = imageView.getTag();
+            if (tag instanceof String && !((String) tag).equals(urlStr)) return;
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
             } else {
-                imageView.setBackgroundColor(0xFF444444);
+                imageView.setBackgroundColor(imageView.getContext().getColor(R.color.img_placeholder_light));
             }
         }
     }

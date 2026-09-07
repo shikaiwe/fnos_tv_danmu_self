@@ -19,14 +19,6 @@ public class FormatUtils {
         return h + "h" + (m < 10 ? "0" : "") + m + "m" + (s < 10 ? "0" : "") + s + "s";
     }
 
-    /** 字节 → KB / MB / GB */
-    public static String fmtSize(long bytes) {
-        if (bytes <= 0) return "?";
-        if (bytes >= 1073741824L) return String.format("%.1f GB", bytes / 1073741824f);
-        if (bytes >= 1048576) return String.format("%.0f MB", bytes / 1048576f);
-        return bytes / 1024 + " KB";
-    }
-
     /** 音频编码名 → 友好名称 */
     public static String fmtAudioCodec(String name) {
         if (name == null) return "?";

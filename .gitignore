@@ -22,6 +22,17 @@ gradle-app.setting
 # local config (敏感)
 local.properties
 
+# 本地 JDK（项目自带的构建工具，不进仓库）
+jdk17/
+
+# 原项目参考副本与内部文档/截图
+example/
+docs/
+screen.png
+
+# ZCode 会话目录
+.zcode/
+
 ################################################
 # Android Studio / IntelliJ IDEA
 ################################################
@@ -81,3 +92,4 @@ Desktop.ini
 ################################################
 
 *.hprof
+fntv-release-keystore.b64

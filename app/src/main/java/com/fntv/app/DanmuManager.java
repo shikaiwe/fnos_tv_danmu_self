@@ -17,8 +17,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.Player;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -34,7 +32,7 @@ import java.util.regex.Pattern;
 public class DanmuManager {
 
     public interface DataProvider {
-        Player getPlayer();
+        MPVTimeSource getTimeSource();
         long getItemDuration();
         String getItemTV();
         String getItemTitle();
@@ -109,10 +107,10 @@ public class DanmuManager {
         if (savedDanmuOn) {
             danmuOn = true;
             danmuView.setVisibility(View.VISIBLE);
-            btnDanmu.setText("弹");
+            btnDanmu.setText("弹幕");
             danmuView.setAreaPct(prefs.getInt("danmu_area", 35));
             danmuView.setSpeedMul(prefs.getFloat("danmu_speed", 1.0f));
-            danmuView.setOpacity(prefs.getFloat("danmu_opacity", 0.85f));
+            danmuView.setOpacity(prefs.getFloat("danmu_opacity", 0.80f));
             danmuView.setFontSize(prefs.getFloat("danmu_fontsize", 22f));
             danmuView.setShowOutline(prefs.getBoolean("danmu_outline", true));
             danmuView.setMaxActive(prefs.getInt("danmu_maxactive", 40));
@@ -121,15 +119,28 @@ public class DanmuManager {
             danmuView.setTargetFps(prefs.getInt("danmu_fps", 60));
             danmuView.setCustomFps(prefs.getBoolean("danmu_custom_fps", false));
             danmuView.setDanmuOffset(prefs.getInt("danmu_offset", 0));
+            // 弹幕开启状态：播放滑入动画 + 按钮珊瑚粉高亮
+            danmuView.showWithAnim();
+            updateButtonState();
         } else {
             danmuView.setVisibility(View.GONE);
-            btnDanmu.setText("弹");
+            btnDanmu.setText("弹幕");
+            updateButtonState();
         }
     }
 
     /** 弹幕是否开启 */
     public boolean isEnabled() {
         return danmuOn;
+    }
+
+    /** 更新弹幕按钮视觉状态（开启=珊瑚粉，关闭=灰色） */
+    public void updateButtonState() {
+        if (btnDanmu == null) return;
+        int textColor = danmuOn
+                ? activity.getColor(R.color.colorAccent)
+                : activity.getColor(R.color.text_secondary);
+        btnDanmu.setTextColor(textColor);
     }
 
     /** 显示弹幕状态提示（可被外部调用，如 HDR/片头跳过提示） */
@@ -289,27 +300,15 @@ public class DanmuManager {
     /** 显示弹幕设置弹窗 */
     public void showSettings() {
         SharedPreferences p = prefs;
-        final boolean[] isOn = {p.getBoolean("danmu_on", true)};
-        final int[] area = {p.getInt("danmu_area", 35)};
-        final float[] speed = {p.getFloat("danmu_speed", 1.0f)};
-        final float[] opacity = {p.getFloat("danmu_opacity", 0.85f)};
-        final float[] fontSize = {p.getFloat("danmu_fontsize", 22f)};
-        final boolean[] outline = {p.getBoolean("danmu_outline", true)};
-        final int[] density = {p.getInt("danmu_density", 100)};
-        final int[] maxActive = {p.getInt("danmu_maxactive", 40)};
-        final int[] offset = {p.getInt("danmu_offset", 0)};
-        final int[] maxComments = {p.getInt("danmu_maxcomments", 50000)};
-        final float[] rowSpacing = {p.getFloat("danmu_rowspacing", 1.8f)};
-        final int[] fps = {p.getInt("danmu_fps", 60)};
-
         final android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
         dialog.setContentView(R.layout.dialog_danmu_settings);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1A1A1A));
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1B201B));
         int screenH = activity.getResources().getDisplayMetrics().heightPixels;
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, (int) (screenH * 0.9f));
+        View root = dialog.getWindow().getDecorView();
 
         final Switch sw = dialog.findViewById(R.id.dm_sw);
-        sw.setChecked(isOn[0]);
+        sw.setChecked(p.getBoolean("danmu_on", true));
 
         final Switch swScroll = dialog.findViewById(R.id.dm_show_scroll);
         final Switch swTop = dialog.findViewById(R.id.dm_show_top);
@@ -336,115 +335,241 @@ public class DanmuManager {
             showDanmuList();
         });
 
-        int opVal = Math.min(100, Math.max(0, (int) (opacity[0] * 100)));
-        setupSlider(dialog, R.id.dm_opacity, "不透明度", opVal, 0, 100, "%");
-        setupSlider(dialog, R.id.dm_area, "显示区域", area[0], 10, 80, "%");
-        setupSlider(dialog, R.id.dm_fontsize, "字号", (int) fontSize[0], 12, 40, "");
-        setupSlider(dialog, R.id.dm_rowspacing, "行间距", (int) (rowSpacing[0] * 100), 120, 300, "x");
-        setupSlider(dialog, R.id.dm_speed, "速度", (int) (speed[0] * 100), 30, 300, "x");
-        setupSlider(dialog, R.id.dm_density, "密度", density[0], 50, 100, "%");
-        setupSlider(dialog, R.id.dm_maxactive, "同屏最大", maxActive[0], 10, 80, "");
-        setupSlider(dialog, R.id.dm_offset, "时间偏移", offset[0] + 120, 0, 240, "s");
-        setupSlider(dialog, R.id.dm_maxcomments, "加载上限", maxComments[0], 100, 50000, "");
-        setupSlider(dialog, R.id.dm_fps, "刷新率", fps[0], 30, 144, "fps");
-
+        setupSliders(root);
         final Switch olSw = dialog.findViewById(R.id.dm_outline);
-        olSw.setChecked(outline[0]);
+        olSw.setChecked(p.getBoolean("danmu_outline", true));
 
         dialog.findViewById(R.id.dm_cancel).setOnClickListener(v -> dialog.dismiss());
         dialog.findViewById(R.id.dm_ok).setOnClickListener(v -> {
-            isOn[0] = sw.isChecked();
-            outline[0] = olSw.isChecked();
-            int a = readSlider(dialog, R.id.dm_area, 10);
-            float sp = readSlider(dialog, R.id.dm_speed, 30) / 100f;
-            float op = readSlider(dialog, R.id.dm_opacity, 0) / 100f;
-            float fs = readSlider(dialog, R.id.dm_fontsize, 12);
-            float rs = readSlider(dialog, R.id.dm_rowspacing, 120) / 100f;
-            int dn = readSlider(dialog, R.id.dm_density, 50);
-            int mx = readSlider(dialog, R.id.dm_maxactive, 10);
-            int of = readSlider(dialog, R.id.dm_offset, 0) - 120;
-            int mc = readSlider(dialog, R.id.dm_maxcomments, 100);
-            int ft = readSlider(dialog, R.id.dm_fps, 30);
-
-            p.edit().putBoolean("danmu_on", isOn[0]).putInt("danmu_area", a)
-                    .putFloat("danmu_speed", sp).putFloat("danmu_opacity", op)
-                    .putFloat("danmu_fontsize", fs).putBoolean("danmu_outline", outline[0])
-                    .putInt("danmu_density", dn).putInt("danmu_maxactive", mx)
-                    .putInt("danmu_offset", of).putInt("danmu_maxcomments", mc)
-                    .putFloat("danmu_rowspacing", rs).putInt("danmu_fps", ft)
-                    .putBoolean("danmu_scroll", swScroll.isChecked())
-                    .putBoolean("danmu_top", swTop.isChecked())
-                    .putBoolean("danmu_bottom", swBottom.isChecked())
-                    .putBoolean("danmu_custom_fps", swCustomFps.isChecked())
-                    .putBoolean("danmu_time_scale", swTimeScale.isChecked()).apply();
-            danmuView.setShowScroll(swScroll.isChecked());
-            danmuView.setShowTop(swTop.isChecked());
-            danmuView.setShowBottom(swBottom.isChecked());
-            if (isOn[0]) {
-                boolean wasOff = !danmuOn;
-                danmuOn = true;
-                danmuView.setVisibility(View.VISIBLE);
-                btnDanmu.setText("弹✕");
-                danmuView.setAreaPct(a);
-                danmuView.setSpeedMul(sp);
-                danmuView.setOpacity(op);
-                danmuView.setFontSize(fs);
-                danmuView.setShowOutline(outline[0]);
-                danmuView.setMaxActive(mx);
-                danmuView.setDensityPct(dn);
-                danmuView.setRowSpacing(rs);
-                danmuView.setCustomFps(swCustomFps.isChecked());
-                danmuView.setTargetFps(ft);
-                danmuView.setDanmuOffset(of);
-                danmuView.stop();
-                danmuView.start();
-                if (danmuItemsOriginal != null) {
-                    // 从原始数据重新应用时间缩放和偏移
-                    danmuItems = new java.util.ArrayList<>(danmuItemsOriginal);
-                    boolean timeScale = prefs.getBoolean("danmu_time_scale", false);
-                    if (timeScale) {
-                        long videoDur = 0;
-                        Player player = data.getPlayer();
-                        if (player != null && player.getDuration() > 0)
-                            videoDur = player.getDuration() / 1000;
-                        else if (data.getItemDuration() > 0)
-                            videoDur = data.getItemDuration();
-                        if (videoDur > 0 && !danmuItems.isEmpty()) {
-                            float maxDanmuTime = danmuItems.get(danmuItems.size() - 1).time;
-                            if (maxDanmuTime > 0) {
-                                float ratio = (float) videoDur / maxDanmuTime;
-                                for (DanmuView.DanmuComment dc : danmuItems) {
-                                    dc.time *= ratio;
-                                }
-                            }
-                        }
-                    }
-                    int offsetSec = prefs.getInt("danmu_offset", 0);
-                    if (offsetSec != 0) {
-                        for (DanmuView.DanmuComment dc : danmuItems) {
-                            dc.time += offsetSec;
-                        }
-                    }
-                    danmuView.loadDanmu(danmuItems);
-                } else if (danmuItems != null) {
-                    danmuView.loadDanmu(danmuItems);
-                }
-                // 从关闭→打开时，触发一次匹配
-                if (wasOff && pendingDanmuTitle != null) loadDanmu(pendingDanmuTitle, pendingDanmuGuid);
-            } else {
-                danmuOn = false;
-                danmuView.setVisibility(View.GONE);
-                btnDanmu.setText("弹");
-                danmuView.stop();
-                danmuView.clear();
-            }
+            applyDanmuSettingsFromControls(root, sw, swScroll, swTop, swBottom, swCustomFps, swTimeScale, olSw);
             dialog.dismiss();
         });
         dialog.show();
     }
 
-    private void setupSlider(android.app.Dialog d, int id, String label, int val, int min, int max, String unit) {
-        ViewGroup v = d.findViewById(id);
+    /**
+     * 接线底部弹幕设置面板（panel_danmu_settings.xml）。
+     * 开关实时生效，滑条修改在点击「确认」后统一生效。
+     *
+     * @param root       面板根视图
+     * @param closePanel 关闭面板回调（由持有 SettingsPanelManager 的调用方提供）
+     */
+    public void bindSettingsPanel(View root, Runnable closePanel) {
+        if (root == null || danmuView == null) return;
+        SharedPreferences p = prefs;
+
+        Switch sw = root.findViewById(R.id.dm_sw);
+        sw.setChecked(p.getBoolean("danmu_on", true));
+        sw.setOnCheckedChangeListener((v, checked) -> setDanmuOn(checked));
+
+        Switch swScroll = root.findViewById(R.id.dm_show_scroll);
+        Switch swTop = root.findViewById(R.id.dm_show_top);
+        Switch swBottom = root.findViewById(R.id.dm_show_bottom);
+        swScroll.setChecked(p.getBoolean("danmu_scroll", true));
+        swTop.setChecked(p.getBoolean("danmu_top", true));
+        swBottom.setChecked(p.getBoolean("danmu_bottom", true));
+        swScroll.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_scroll", c).apply();
+            danmuView.setShowScroll(c);
+        });
+        swTop.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_top", c).apply();
+            danmuView.setShowTop(c);
+        });
+        swBottom.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_bottom", c).apply();
+            danmuView.setShowBottom(c);
+        });
+
+        Switch swCustomFps = root.findViewById(R.id.dm_custom_fps);
+        swCustomFps.setChecked(p.getBoolean("danmu_custom_fps", false));
+        swCustomFps.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_custom_fps", c).apply();
+            danmuView.setCustomFps(c);
+        });
+
+        Switch swTimeScale = root.findViewById(R.id.dm_time_scale);
+        swTimeScale.setChecked(p.getBoolean("danmu_time_scale", false));
+        swTimeScale.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_time_scale", c).apply();
+            applyDanmuFromPrefs(); // 时间缩放需要按新比例重新排布弹幕
+        });
+
+        Switch olSw = root.findViewById(R.id.dm_outline);
+        olSw.setChecked(p.getBoolean("danmu_outline", true));
+        olSw.setOnCheckedChangeListener((v, c) -> {
+            p.edit().putBoolean("danmu_outline", c).apply();
+            danmuView.setShowOutline(c);
+        });
+
+        root.findViewById(R.id.dm_matchBtn).setOnClickListener(v -> {
+            closePanel.run();
+            showDanmuSearch();
+        });
+        root.findViewById(R.id.dm_listBtn).setOnClickListener(v -> {
+            closePanel.run();
+            showDanmuList();
+        });
+
+        setupSliders(root);
+
+        Button reset = root.findViewById(R.id.btnDanmuReset);
+        if (reset != null) {
+            reset.setOnClickListener(v -> resetDanmuDefaults(root, closePanel));
+        }
+        Button confirm = root.findViewById(R.id.btnDanmuConfirm);
+        if (confirm != null) {
+            confirm.setOnClickListener(v -> {
+                applyDanmuSettingsFromControls(root, sw, swScroll, swTop, swBottom, swCustomFps, swTimeScale, olSw);
+                closePanel.run();
+            });
+        }
+    }
+
+    /** 按当前 prefs 初始化弹幕设置滑条（对话框与面板共用） */
+    private void setupSliders(View root) {
+        SharedPreferences p = prefs;
+        int opVal = Math.min(100, Math.max(0, (int) (p.getFloat("danmu_opacity", 0.85f) * 100)));
+        setupSlider(root, R.id.dm_opacity, "不透明度", opVal, 0, 100, "%");
+        setupSlider(root, R.id.dm_area, "显示区域", p.getInt("danmu_area", 35), 10, 80, "%");
+        setupSlider(root, R.id.dm_fontsize, "字号", (int) p.getFloat("danmu_fontsize", 22f), 12, 40, "");
+        setupSlider(root, R.id.dm_rowspacing, "行间距", (int) (p.getFloat("danmu_rowspacing", 1.8f) * 100), 120, 300, "x");
+        setupSlider(root, R.id.dm_speed, "速度", (int) (p.getFloat("danmu_speed", 1.0f) * 100), 30, 300, "x");
+        setupSlider(root, R.id.dm_density, "密度", p.getInt("danmu_density", 100), 50, 100, "%");
+        setupSlider(root, R.id.dm_maxactive, "同屏最大", p.getInt("danmu_maxactive", 40), 10, 80, "");
+        setupSlider(root, R.id.dm_offset, "时间偏移", p.getInt("danmu_offset", 0) + 120, 0, 240, "s");
+        setupSlider(root, R.id.dm_maxcomments, "加载上限", p.getInt("danmu_maxcomments", 50000), 100, 50000, "");
+        setupSlider(root, R.id.dm_fps, "刷新率", p.getInt("danmu_fps", 60), 30, 144, "fps");
+    }
+
+    /**
+     * 从设置控件读取值写入 prefs 并应用到运行时（对话框「确定」/面板「确认」共用）
+     */
+    private void applyDanmuSettingsFromControls(View root, Switch sw, Switch swScroll, Switch swTop,
+                                                Switch swBottom, Switch swCustomFps, Switch swTimeScale, Switch olSw) {
+        SharedPreferences p = prefs;
+        p.edit().putBoolean("danmu_on", sw.isChecked())
+                .putBoolean("danmu_outline", olSw.isChecked())
+                .putInt("danmu_area", readSlider(root, R.id.dm_area, 10))
+                .putFloat("danmu_speed", readSlider(root, R.id.dm_speed, 30) / 100f)
+                .putFloat("danmu_opacity", readSlider(root, R.id.dm_opacity, 0) / 100f)
+                .putFloat("danmu_fontsize", readSlider(root, R.id.dm_fontsize, 12))
+                .putFloat("danmu_rowspacing", readSlider(root, R.id.dm_rowspacing, 120) / 100f)
+                .putInt("danmu_density", readSlider(root, R.id.dm_density, 50))
+                .putInt("danmu_maxactive", readSlider(root, R.id.dm_maxactive, 10))
+                .putInt("danmu_offset", readSlider(root, R.id.dm_offset, 0) - 120)
+                .putInt("danmu_maxcomments", readSlider(root, R.id.dm_maxcomments, 100))
+                .putInt("danmu_fps", readSlider(root, R.id.dm_fps, 30))
+                .putBoolean("danmu_scroll", swScroll.isChecked())
+                .putBoolean("danmu_top", swTop.isChecked())
+                .putBoolean("danmu_bottom", swBottom.isChecked())
+                .putBoolean("danmu_custom_fps", swCustomFps.isChecked())
+                .putBoolean("danmu_time_scale", swTimeScale.isChecked()).apply();
+        applyDanmuFromPrefs();
+    }
+
+    /** 恢复弹幕默认设置并重新绑定面板控件值 */
+    private void resetDanmuDefaults(View root, Runnable closePanel) {
+        prefs.edit()
+                .putBoolean("danmu_on", true).putInt("danmu_area", 35)
+                .putFloat("danmu_speed", 1.0f).putFloat("danmu_opacity", 0.85f)
+                .putFloat("danmu_fontsize", 22f).putBoolean("danmu_outline", true)
+                .putInt("danmu_density", 100).putInt("danmu_maxactive", 40)
+                .putInt("danmu_offset", 0).putInt("danmu_maxcomments", 50000)
+                .putFloat("danmu_rowspacing", 1.8f).putInt("danmu_fps", 60)
+                .putBoolean("danmu_scroll", true).putBoolean("danmu_top", true)
+                .putBoolean("danmu_bottom", true)
+                .putBoolean("danmu_custom_fps", false)
+                .putBoolean("danmu_time_scale", false).apply();
+        applyDanmuFromPrefs();
+        bindSettingsPanel(root, closePanel);
+    }
+
+    /**
+     * 将 prefs 中的弹幕配置应用到运行时视图（开关切换 / 设置确认后的统一入口）
+     */
+    private void applyDanmuFromPrefs() {
+        if (danmuView == null) return;
+        SharedPreferences p = prefs;
+        boolean on = p.getBoolean("danmu_on", true);
+        danmuView.setShowScroll(p.getBoolean("danmu_scroll", true));
+        danmuView.setShowTop(p.getBoolean("danmu_top", true));
+        danmuView.setShowBottom(p.getBoolean("danmu_bottom", true));
+        if (on) {
+            boolean wasOff = !danmuOn;
+            danmuOn = true;
+            // 从关闭→打开：播放滑入动画
+            if (wasOff) {
+                danmuView.setVisibility(View.VISIBLE);
+                danmuView.showWithAnim();
+            }
+            btnDanmu.setText("弹幕✕");
+            updateButtonState();
+            danmuView.setAreaPct(p.getInt("danmu_area", 35));
+            danmuView.setSpeedMul(p.getFloat("danmu_speed", 1.0f));
+            danmuView.setOpacity(p.getFloat("danmu_opacity", 0.85f));
+            danmuView.setFontSize(p.getFloat("danmu_fontsize", 22f));
+            danmuView.setShowOutline(p.getBoolean("danmu_outline", true));
+            danmuView.setMaxActive(p.getInt("danmu_maxactive", 40));
+            danmuView.setDensityPct(p.getInt("danmu_density", 100));
+            danmuView.setRowSpacing(p.getFloat("danmu_rowspacing", 1.8f));
+            danmuView.setCustomFps(p.getBoolean("danmu_custom_fps", false));
+            danmuView.setTargetFps(p.getInt("danmu_fps", 60));
+            danmuView.setDanmuOffset(p.getInt("danmu_offset", 0));
+            danmuView.stop();
+            danmuView.start();
+            if (danmuItemsOriginal != null) {
+                // 从原始数据重新应用时间缩放和偏移
+                danmuItems = new java.util.ArrayList<>(danmuItemsOriginal);
+                boolean timeScale = prefs.getBoolean("danmu_time_scale", false);
+                if (timeScale) {
+                    long videoDur = 0;
+                    MPVTimeSource timeSource = data.getTimeSource();
+                    if (timeSource != null && timeSource.getDurationMs() > 0)
+                        videoDur = timeSource.getDurationMs() / 1000;
+                    else if (data.getItemDuration() > 0)
+                        videoDur = data.getItemDuration();
+                    if (videoDur > 0 && !danmuItems.isEmpty()) {
+                        float maxDanmuTime = danmuItems.get(danmuItems.size() - 1).time;
+                        if (maxDanmuTime > 0) {
+                            float ratio = (float) videoDur / maxDanmuTime;
+                            for (DanmuView.DanmuComment dc : danmuItems) {
+                                dc.time *= ratio;
+                            }
+                        }
+                    }
+                }
+                int offsetSec = prefs.getInt("danmu_offset", 0);
+                if (offsetSec != 0) {
+                    for (DanmuView.DanmuComment dc : danmuItems) {
+                        dc.time += offsetSec;
+                    }
+                }
+                danmuView.loadDanmu(danmuItems);
+            } else if (danmuItems != null) {
+                danmuView.loadDanmu(danmuItems);
+            }
+            // 从关闭→打开时，触发一次匹配
+            if (wasOff && pendingDanmuTitle != null) loadDanmu(pendingDanmuTitle, pendingDanmuGuid);
+        } else {
+            danmuOn = false;
+            // 弹幕关闭：播放淡出动画
+            danmuView.hideWithAnim();
+            btnDanmu.setText("弹幕");
+            updateButtonState();
+            danmuView.stop();
+            danmuView.clear();
+        }
+    }
+
+    /** 外部直接开关弹幕（写 prefs 并应用，供设置面板总开关使用） */
+    public void setDanmuOn(boolean on) {
+        prefs.edit().putBoolean("danmu_on", on).apply();
+        applyDanmuFromPrefs();
+    }
+
+    private void setupSlider(View root, int id, String label, int val, int min, int max, String unit) {
+        ViewGroup v = root.findViewById(id);
         if (v == null) return;
         TextView tv = v.findViewById(R.id.dm_label);
         SeekBar sb = v.findViewById(R.id.dm_seekbar);
@@ -497,8 +622,8 @@ public class DanmuManager {
         }
     }
 
-    private int readSlider(android.app.Dialog d, int id, int min) {
-        SeekBar sb = d.findViewById(id).findViewById(R.id.dm_seekbar);
+    private int readSlider(View root, int id, int min) {
+        SeekBar sb = root.findViewById(id).findViewById(R.id.dm_seekbar);
         return sb != null ? sb.getProgress() + min : min;
     }
 
@@ -507,7 +632,7 @@ public class DanmuManager {
     private void showDanmuSearch() {
         final android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
         dialog.setContentView(R.layout.dialog_danmu_search);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1A1A1A));
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1B201B));
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         // 标题上加当前剧集信息
@@ -546,11 +671,11 @@ public class DanmuManager {
             results.removeAllViews();
             sBtn.setEnabled(false);
             sBtn.setText("搜索中...");
-            sBtn.setTextColor(0xFF808080);
+            sBtn.setTextColor(activity.getColor(R.color.text_secondary));
             Log.d(TAG, "搜索: " + kw);
             TextView ld = new TextView(activity);
             ld.setText("正在搜索  " + kw + "...");
-            ld.setTextColor(0xFF808080);
+            ld.setTextColor(activity.getColor(R.color.text_secondary));
             ld.setPadding(0, 12, 0, 10);
             ld.setTextSize(14);
             results.addView(ld);
@@ -582,10 +707,10 @@ public class DanmuManager {
                         if (finalArr.length() == 0) {
                             sBtn.setEnabled(true);
                             sBtn.setText("搜索");
-                            sBtn.setTextColor(0xFFFFFFFF);
+                            sBtn.setTextColor(activity.getColor(R.color.text_white));
                             TextView e = new TextView(activity);
                             e.setText("未找到匹配结果");
-                            e.setTextColor(0xFF808080);
+                            e.setTextColor(activity.getColor(R.color.text_secondary));
                             e.setPadding(0, 20, 0, 10);
                             results.addView(e);
                             return;
@@ -603,7 +728,7 @@ public class DanmuManager {
                             Button b = new Button(activity);
                             b.setBackgroundResource(R.drawable.bg_search_item);
                             b.setText(labelStr);
-                            b.setTextColor(0xFFEEEEEE);
+                            b.setTextColor(activity.getColor(R.color.text_primary));
                             b.setPadding(16, 14, 16, 14);
                             b.setAllCaps(false);
                             b.setTextSize(14);
@@ -626,7 +751,7 @@ public class DanmuManager {
                         sBtn.setText("搜索");
                         TextView er = new TextView(activity);
                         er.setText("搜索失败: " + e.getMessage());
-                        er.setTextColor(0xFFFF6B6B);
+                        er.setTextColor(activity.getColor(R.color.error));
                         er.setPadding(0, 20, 0, 10);
                         results.addView(er);
                     });
@@ -638,7 +763,7 @@ public class DanmuManager {
     private void showDanmuList() {
         final android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
         dialog.setContentView(R.layout.dialog_danmu_list);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1A1A1A));
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1B201B));
         int screenH = activity.getResources().getDisplayMetrics().heightPixels;
         int dialogH = (int) (screenH * 0.9f);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, dialogH);
@@ -828,7 +953,7 @@ public class DanmuManager {
                 activity.runOnUiThread(() -> {
                     final android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
                     dialog.setContentView(R.layout.dialog_danmu_search);
-                    dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1A1A1A));
+                    dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1B201B));
 
                     // 改标题（加上剧集信息）
                     TextView titleView2 = dialog.findViewById(R.id.dm_search_title);
@@ -858,7 +983,7 @@ public class DanmuManager {
                         Button b = new Button(activity);
                         b.setBackgroundResource(R.drawable.bg_search_item);
                         b.setText(epLabels[ei]);
-                        b.setTextColor(0xFFEEEEEE);
+                        b.setTextColor(activity.getColor(R.color.text_primary));
                         b.setPadding(16, 14, 16, 14);
                         b.setAllCaps(false);
                         b.setTextSize(14);
@@ -999,10 +1124,11 @@ public class DanmuManager {
                     boolean timeScale = prefs.getBoolean("danmu_time_scale", false);
                     if (timeScale) {
                         long videoDur = 0;
-                        Player p = data.getPlayer();
-                        if (p != null && p.getDuration() > 0)
-                            videoDur = p.getDuration() / 1000;
-                        else if (data.getItemDuration() > 0)
+                        MPVTimeSource ts = data.getTimeSource();
+                        // 弹幕时间戳单位为秒，mpv 时长为毫秒，需换算
+                        if (ts != null && ts.getDurationMs() > 0)
+                            videoDur = ts.getDurationMs() / 1000;
+                        if (videoDur <= 0)
                             videoDur = data.getItemDuration();
                         if (videoDur > 0 && !list.isEmpty()) {
                             float maxDanmuTime = list.get(list.size() - 1).time;

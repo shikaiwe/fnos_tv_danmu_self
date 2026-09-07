@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-首页主界面 - 底部三 Tab 导航
-影视: 浏览媒体内容（按媒体库分类）
-媒体库: 媒体库分组列表
-设置: 用户配置
-DPAD 遥控器友好
+首页主界面 — 手机触屏风格重构
+- 影视 Tab: 顶部栏(返回+居中标题+搜索) + 文件夹卡片行 + 继续观看 + 筛选chips + 各媒体库海报区块
+- 媒体库 Tab: 胶囊搜索框 + 库列表
+- 设置 Tab: 分组卡片
+- 底部导航: 图标+文字，选中白色/未选灰色
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
@@ -27,28 +29,78 @@ DPAD 遥控器友好
             android:orientation="vertical"
             android:visibility="visible">
 
-            <ScrollView
+            <!-- 顶部栏：返回 + 居中标题 + 搜索 -->
+            <RelativeLayout
+                android:id="@+id/homeTopBar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/home_top_bar_height"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp">
+
+                <ImageView
+                    android:id="@+id/btnBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentStart="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="返回"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvHomeTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="飞牛影视"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btnSearch"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="搜索"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/text_primary" />
+            </RelativeLayout>
+
+            <!-- 首页滚动内容 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/homeScroll"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fillViewport="true"
-                android:scrollbars="none"
-                android:descendantFocusability="afterDescendants">
+                android:scrollbars="none">
 
                 <LinearLayout
-                    android:id="@+id/moviesGridContainer"
+                    android:id="@+id/homeContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:paddingBottom="12dp">
 
+                    <!-- 加载/空状态 -->
                     <TextView
                         android:id="@+id/tvMoviesLoading"
                         android:layout_width="match_parent"
                         android:layout_height="120dp"
                         android:gravity="center"
-                        android:text="加载中..."
+                        android:text="正在加载媒体库..."
                         android:textColor="@color/text_hint"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:visibility="gone" />
 
                     <TextView
@@ -56,14 +108,138 @@ DPAD 遥控器友好
                         android:layout_width="match_parent"
                         android:layout_height="120dp"
                         android:gravity="center"
-                        android:text="请选择媒体库"
+                        android:text="暂无影视内容"
                         android:textColor="@color/text_hint"
-                        android:textSize="14sp"
-                        android:visibility="visible" />
+                        android:textSize="15sp"
+                        android:visibility="gone" />
+
+                    <!-- 概览页：文件夹行 + 继续观看 + chips + 各库区块 -->
+                    <LinearLayout
+                        android:id="@+id/pageOverview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <!-- 媒体库文件夹卡片行 -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvLibraries"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:orientation="horizontal"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+                    <!-- 继续观看 -->
+                    <LinearLayout
+                        android:id="@+id/sectionContinue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/home_section_header_height"
+                            android:gravity="center_vertical"
+                            android:paddingLeft="16dp"
+                            android:text="继续观看"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvContinue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clipToPadding="false"
+                            android:orientation="horizontal"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
+                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                    </LinearLayout>
+
+                    <!-- 筛选 chips -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvChips"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:clipToPadding="false"
+                        android:orientation="horizontal"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+                    <!-- 各媒体库海报区块（动态填充） -->
+                    <LinearLayout
+                        android:id="@+id/sectionsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- 内容页：详情 / 浏览网格 / 剧集 / 直播网格（动态填充） -->
+                    <LinearLayout
+                        android:id="@+id/pageContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone" />
 
                 </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
 
-            </ScrollView>
+            <!-- 首页搜索面板 -->
+            <LinearLayout
+                android:id="@+id/searchPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/etHomeSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_search_bar"
+                    android:hint="搜索影视..."
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="14sp"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSearchResults"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:padding="12dp"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tvSearchEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="center"
+                    android:text="搜索无结果"
+                    android:textColor="@color/text_hint"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            </FrameLayout>
 
         </LinearLayout>
 
@@ -75,28 +251,56 @@ DPAD 遥控器友好
             android:orientation="vertical"
             android:visibility="gone">
 
-            <EditText
-                android:id="@+id/etSearch"
+            <!-- 顶部栏：返回 + 居中标题（搜索模式时右侧显示搜索图标） -->
+            <RelativeLayout
+                android:id="@+id/libraryTopBar"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input"
-                android:hint="搜索媒体库..."
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_hint"
-                android:textSize="14sp"
-                android:paddingLeft="14dp"
-                android:paddingRight="14dp"
-                android:singleLine="true"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:focusable="true" />
+                android:layout_height="@dimen/home_top_bar_height"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp">
 
+                <ImageView
+                    android:id="@+id/btnLibraryBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentStart="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="返回"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvLibraryTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="媒体库"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btnLibrarySearch"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="搜索"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_search"
+                    android:visibility="gone"
+                    app:tint="@color/text_primary" />
+            </RelativeLayout>
+
+            <!-- 列表页：收藏/已下载 + 媒体库 + 分类 -->
             <ScrollView
+                android:id="@+id/libraryListPage"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:fillViewport="true"
                 android:scrollbars="none">
 
@@ -105,7 +309,9 @@ DPAD 遥控器友好
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:paddingBottom="16dp">
 
                     <TextView
                         android:id="@+id/tvLibraryLoading"
@@ -114,7 +320,7 @@ DPAD 遥控器友好
                         android:gravity="center"
                         android:text="加载中..."
                         android:textColor="@color/text_hint"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:visibility="gone" />
 
                     <TextView
@@ -124,12 +330,162 @@ DPAD 遥控器友好
                         android:gravity="center"
                         android:text="暂无媒体库"
                         android:textColor="@color/text_hint"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:visibility="gone" />
 
                 </LinearLayout>
 
             </ScrollView>
+
+            <!-- 浏览页：排序栏 + 网格 -->
+            <LinearLayout
+                android:id="@+id/libraryBrowsePage"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/btnLibSort"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+
+                        <TextView
+                            android:id="@+id/tvLibSortLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="按添加日期"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_marginLeft="6dp"
+                            android:src="@drawable/ic_sort"
+                            app:tint="@color/text_secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvLibBrowseCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:layout_marginLeft="10dp"
+                        android:background="@drawable/bg_resolution_badge"
+                        android:gravity="center"
+                        android:minWidth="36dp"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <ImageView
+                        android:id="@+id/btnLibGridMode"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="视图"
+                        android:scaleType="center"
+                        android:src="@drawable/ic_dashboard"
+                        app:tint="@color/text_primary" />
+
+                    <ImageView
+                        android:id="@+id/btnLibFilter"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginLeft="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="排序"
+                        android:scaleType="center"
+                        android:src="@drawable/ic_filter"
+                        app:tint="@color/text_primary" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvLibBrowse"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:paddingBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/tvLibBrowseEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="center"
+                    android:text="暂无内容"
+                    android:textColor="@color/text_hint"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- 搜索面板 -->
+            <LinearLayout
+                android:id="@+id/librarySearchPanel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_search_bar"
+                    android:hint="搜索影视..."
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="14sp"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvLibrarySearchResults"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:padding="12dp"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tvLibrarySearchEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="center"
+                    android:text="搜索无结果"
+                    android:textColor="@color/text_hint"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -144,9 +500,9 @@ DPAD 遥控器友好
             <RelativeLayout
                 android:id="@+id/settingsHeader"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:paddingLeft="14dp"
-                android:paddingRight="14dp">
+                android:layout_height="48dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="16dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -154,7 +510,7 @@ DPAD 遥控器友好
                     android:layout_centerVertical="true"
                     android:text="设置"
                     android:textColor="@color/text_primary"
-                    android:textSize="15sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
             </RelativeLayout>
@@ -182,21 +538,21 @@ DPAD 遥控器友好
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_card"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="账户信息"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="8dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="12dp"
                             android:background="@color/divider" />
 
                         <TextView
@@ -204,7 +560,7 @@ DPAD 遥控器友好
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="用户名: --"
-                            android:textColor="@color/text_secondary"
+                            android:textColor="@color/text_primary"
                             android:textSize="13sp" />
 
                         <TextView
@@ -222,34 +578,33 @@ DPAD 遥控器友好
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:background="@drawable/bg_card"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="播放设置"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="8dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="12dp"
                             android:background="@color/divider" />
 
                         <RelativeLayout
                             android:id="@+id/rlDecoderSetting"
                             android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:background="@drawable/bg_input"
-                            android:focusable="true"
-                            android:paddingLeft="12dp"
-                            android:paddingRight="12dp">
+                            android:layout_height="@dimen/setting_row_height"
+                            android:background="@drawable/bg_settings_item"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -266,7 +621,7 @@ DPAD 遥控器友好
                                 android:layout_alignParentRight="true"
                                 android:layout_centerVertical="true"
                                 android:text="硬解"
-                                android:textColor="@color/colorAccent"
+                                android:textColor="@color/accent_light"
                                 android:textSize="14sp" />
 
                         </RelativeLayout>
@@ -275,12 +630,11 @@ DPAD 遥控器友好
                         <RelativeLayout
                             android:id="@+id/rlSeekStep"
                             android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:layout_marginTop="8dp"
-                            android:background="@drawable/bg_input"
-                            android:focusable="true"
-                            android:paddingLeft="12dp"
-                            android:paddingRight="12dp">
+                            android:layout_height="@dimen/setting_row_height"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_settings_item"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -297,7 +651,37 @@ DPAD 遥控器友好
                                 android:layout_alignParentRight="true"
                                 android:layout_centerVertical="true"
                                 android:text="10s"
-                                android:textColor="@color/colorAccent"
+                                android:textColor="@color/accent_light"
+                                android:textSize="14sp" />
+
+                        </RelativeLayout>
+
+                        <!-- 长按倍速 -->
+                        <RelativeLayout
+                            android:id="@+id/rlGestureSpeed"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/setting_row_height"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_settings_item"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerVertical="true"
+                                android:text="长按倍速"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/tvGestureSpeedValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:text="2.0x"
+                                android:textColor="@color/accent_light"
                                 android:textSize="14sp" />
 
                         </RelativeLayout>
@@ -306,12 +690,11 @@ DPAD 遥控器友好
                         <RelativeLayout
                             android:id="@+id/rlDanmuSetting"
                             android:layout_width="match_parent"
-                            android:layout_height="52dp"
-                            android:layout_marginTop="8dp"
-                            android:background="@drawable/bg_input"
-                            android:focusable="true"
-                            android:paddingLeft="12dp"
-                            android:paddingRight="12dp">
+                            android:layout_height="@dimen/setting_row_height"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_settings_item"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -328,7 +711,7 @@ DPAD 遥控器友好
                                 android:layout_alignParentRight="true"
                                 android:layout_centerVertical="true"
                                 android:text=""
-                                android:textColor="@color/colorAccent"
+                                android:textColor="@color/accent_light"
                                 android:textSize="12sp"
                                 android:maxWidth="160dp"
                                 android:singleLine="true"
@@ -342,24 +725,24 @@ DPAD 遥控器友好
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:background="@drawable/bg_card"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="20dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="关于"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="8dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="12dp"
                             android:background="@color/divider" />
 
                         <TextView
@@ -368,30 +751,62 @@ DPAD 遥控器友好
                             android:layout_height="wrap_content"
                             android:text="FN TV v1.0"
                             android:textColor="@color/text_secondary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="基于飞牛影视 API 的第三方 TV 客户端，支持弹幕、自动连播、倍速播放、硬解/软解切换，并针对电视遥控器做了焦点优化。"
+                            android:textColor="@color/text_hint"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="3dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="本项目基于开源项目 rgcaafe/fnos_tv_danmu 二次开发，遵循 GPLv3 开源协议。"
+                            android:textColor="@color/text_hint"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="3dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="开源地址"
+                            android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="github.com/shikaiwe/fnos_tv_danmu_self"
+                            android:textColor="@color/accent_light"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="本应用仅供学习交流使用，不存储、不提供任何影视资源，所有内容均来自用户自行配置的飞牛影视服务器。"
+                            android:textColor="@color/text_hint"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="3dp" />
 
                         <Button
                             android:id="@+id/btnCheckUpdate"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:layout_marginTop="12dp"
+                            android:layout_marginTop="16dp"
                             android:background="@drawable/bg_btn_primary"
                             android:focusable="true"
                             android:text="检查更新"
                             android:textAllCaps="false"
                             android:textColor="@color/text_white"
-                            android:textSize="14sp" />
-
-                        <Button
-                            android:id="@+id/btnFeedback"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:layout_marginTop="10dp"
-                            android:background="@drawable/bg_input"
-                            android:focusable="true"
-                            android:text="问题反馈"
-                            android:textAllCaps="false"
-                            android:textColor="@color/text_primary"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -402,8 +817,7 @@ DPAD 遥控器友好
                         android:layout_width="match_parent"
                         android:layout_height="52dp"
                         android:layout_marginTop="24dp"
-                        android:background="@drawable/bg_btn_primary"
-                        android:focusable="true"
+                        android:background="@drawable/bg_btn_danger"
                         android:text="退出登录"
                         android:textAllCaps="false"
                         android:textColor="@color/text_white"
@@ -423,59 +837,91 @@ DPAD 遥控器友好
         android:layout_height="1dp"
         android:background="@color/divider" />
 
-    <!-- ========== 底部 Tab 栏 ========== -->
+    <!-- ========== 底部导航栏：图标+文字 ========== -->
     <LinearLayout
         android:id="@+id/tabBar"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="60dp"
         android:background="@color/bg_dark"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingLeft="6dp"
-        android:paddingRight="6dp">
+        android:orientation="horizontal">
 
-        <Button
+        <LinearLayout
             android:id="@+id/tabMovies"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@drawable/selector_tab"
-            android:focusable="true"
-            android:nextFocusRight="@+id/tabLibrary"
-            android:text="影视"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp" />
+            android:gravity="center"
+            android:orientation="vertical"
+            android:background="?attr/selectableItemBackgroundBorderless">
 
-        <Button
+            <ImageView
+                android:id="@+id/iconTabMovies"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_movies"
+                app:tint="@color/nav_inactive" />
+
+            <TextView
+                android:id="@+id/textTabMovies"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="影视"
+                android:textColor="@color/nav_inactive"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/tabLibrary"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@drawable/selector_tab"
-            android:focusable="true"
-            android:nextFocusLeft="@+id/tabMovies"
-            android:nextFocusRight="@+id/tabSettings"
-            android:text="媒体库"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp" />
+            android:gravity="center"
+            android:orientation="vertical"
+            android:background="?attr/selectableItemBackgroundBorderless">
 
-        <Button
+            <ImageView
+                android:id="@+id/iconTabLibrary"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_library"
+                app:tint="@color/nav_inactive" />
+
+            <TextView
+                android:id="@+id/textTabLibrary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="媒体库"
+                android:textColor="@color/nav_inactive"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/tabSettings"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_margin="3dp"
             android:layout_weight="1"
-            android:background="@drawable/selector_tab"
-            android:focusable="true"
-            android:nextFocusLeft="@+id/tabLibrary"
-            android:text="设置"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp" />
+            android:gravity="center"
+            android:orientation="vertical"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:id="@+id/iconTabSettings"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_settings"
+                app:tint="@color/nav_inactive" />
+
+            <TextView
+                android:id="@+id/textTabSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="设置"
+                android:textColor="@color/nav_inactive"
+                android:textSize="11sp" />
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -2,4 +2,41 @@
 <resources>
     <!-- 用于 ScrollView 内容最小高度，实现居中效果 -->
     <dimen name="min_height_fill">480dp</dimen>
+
+    <!-- ===== 圆角半径 ===== -->
+    <dimen name="card_radius">16dp</dimen>
+    <dimen name="chip_radius">20dp</dimen>
+    <dimen name="button_radius">12dp</dimen>
+    <dimen name="media_card_radius">14dp</dimen>
+    <dimen name="input_radius">12dp</dimen>
+    <dimen name="dialog_radius">16dp</dimen>
+    <dimen name="poster_radius">14dp</dimen>
+
+    <!-- ===== 字号 ===== -->
+    <dimen name="text_size_title">20sp</dimen>
+    <dimen name="text_size_subtitle">15sp</dimen>
+    <dimen name="text_size_body">13sp</dimen>
+    <dimen name="text_size_caption">11sp</dimen>
+
+    <!-- ===== 间距 ===== -->
+    <dimen name="padding_normal">16dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_xlarge">28dp</dimen>
+
+    <!-- ===== 控件尺寸 ===== -->
+    <dimen name="tab_height">56dp</dimen>
+    <dimen name="setting_row_height">56dp</dimen>
+    <dimen name="media_card_poster_height">140dp</dimen>
+    <dimen name="gesture_indicator_size">72dp</dimen>
+
+    <!-- ===== 首页新 UI ===== -->
+    <dimen name="home_top_bar_height">56dp</dimen>
+    <dimen name="home_section_header_height">40dp</dimen>
+    <dimen name="home_lib_card_width">150dp</dimen>
+    <dimen name="home_lib_card_height">92dp</dimen>
+    <dimen name="home_continue_width">200dp</dimen>
+    <dimen name="home_continue_image_height">112dp</dimen>
+    <dimen name="home_poster_width">108dp</dimen>
+    <dimen name="home_badge_height">20dp</dimen>
 </resources>

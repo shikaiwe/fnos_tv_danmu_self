@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 字幕设置面板（底部滑出）— 替代 dialog_subtitle_style.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/subtitleSettingsPanel"
+    android:layout_width="380dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="end"
+    android:orientation="vertical"
+    android:background="@drawable/bg_side_panel"
+    android:clickable="true"
+    android:focusable="true"
+    android:padding="20dp"
+    android:visibility="gone">
+
+
+    <!-- 标题栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="字幕设置"
+            android:textColor="@color/colorAccent"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnSubReset"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/bg_chip"
+            android:text="重置"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:focusable="true"
+            android:nextFocusDown="@+id/dm_scale" />
+
+        <Button
+            android:id="@+id/btnSubConfirm"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_chip"
+            android:text="✓"
+            android:textColor="@color/colorAccent"
+            android:textSize="16sp"
+            android:focusable="true"
+            android:nextFocusUp="@+id/btnSubReset" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 字号缩放 -->
+            <include layout="@layout/item_danmu_slider"
+                android:id="@+id/dm_scale" />
+
+            <!-- 垂直偏移 -->
+            <include layout="@layout/item_danmu_slider"
+                android:id="@+id/dm_offset" />
+
+            <!-- 延迟对齐 -->
+            <include layout="@layout/item_danmu_slider"
+                android:id="@+id/dm_delay" />
+
+            <!-- 显示字幕 + 外挂字幕 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="显示字幕"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:focusable="true"
+                    android:nextFocusRight="@+id/dm_visible" />
+
+                <Switch
+                    android:id="@+id/dm_visible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/tv_sub_visible_label"
+                    android:nextFocusDown="@+id/dm_load_ext" />
+
+            </LinearLayout>
+
+            <!-- 加载外挂字幕 -->
+            <Button
+                android:id="@+id/dm_load_ext"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_chip"
+                android:text="加载外挂字幕"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:focusable="true"
+                android:nextFocusUp="@+id/dm_visible"
+                android:nextFocusDown="@+id/btnSubCancel" />
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

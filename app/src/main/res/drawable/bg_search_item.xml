@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格搜索项 — 增大圆角，焦点珊瑚粉 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#FF3A3A3A" />
-            <stroke android:width="2dp" android:color="#FF81C784" />
-            <corners android:radius="10dp" />
+            <solid android:color="@color/bg_card_elevated" />
+            <stroke android:width="2dp" android:color="@color/focus_highlight" />
+            <corners android:radius="12dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FF2A2A2A" />
-            <corners android:radius="10dp" />
+            <solid android:color="@color/bg_card" />
+            <corners android:radius="12dp" />
         </shape>
     </item>
 </selector>

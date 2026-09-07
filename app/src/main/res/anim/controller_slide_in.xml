@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 控制栏滑入动画：从底部 60dp 处向上平移至原位 -->
+<translate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:fromYDelta="60dp"
+    android:toYDelta="0dp"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator" />

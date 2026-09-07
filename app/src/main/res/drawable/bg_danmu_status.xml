@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格弹幕状态提示 — 增大圆角，微调背景透明度 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#CC000000" />
-    <corners android:radius="20dp" />
+    <solid android:color="#DD000000" />
+    <corners android:radius="24dp" />
 </shape>

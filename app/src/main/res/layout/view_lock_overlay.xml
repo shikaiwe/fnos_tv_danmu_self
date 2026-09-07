@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  锁定遮罩层 — 锁定后覆盖全屏幕四角的半透明角标
+  双击任意位置可解除锁定（由 PlayerActivity 处理）
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/lockOverlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:visibility="gone">
+
+    <!-- 左上角锁定图标 -->
+    <ImageView
+        android:id="@+id/lockIconTL"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_lock_on"
+        android:tint="#66FFFFFF"
+        android:contentDescription="@null" />
+
+    <!-- 右上角锁定图标 -->
+    <ImageView
+        android:id="@+id/lockIconTR"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_lock_on"
+        android:tint="#66FFFFFF"
+        android:contentDescription="@null" />
+
+    <!-- 左下角锁定图标 -->
+    <ImageView
+        android:id="@+id/lockIconBL"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_lock_on"
+        android:tint="#66FFFFFF"
+        android:contentDescription="@null" />
+
+    <!-- 右下角锁定图标 -->
+    <ImageView
+        android:id="@+id/lockIconBR"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_lock_on"
+        android:tint="#66FFFFFF"
+        android:contentDescription="@null" />
+
+</FrameLayout>

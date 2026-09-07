@@ -32,16 +32,23 @@ public class EpisodeManager {
     private boolean loadingEpisodes = false;
     private final Callback cb;
     private final Button btnEpisodeList;
+    private final Button btnPrevEp;
     private final Button btnNextEp;
     private String currentGuid;
     private String currentTitle;
 
     private static final String TAG = "Player";
 
-    public EpisodeManager(Callback cb, Button btnEpisodeList, Button btnNextEp) {
+    public EpisodeManager(Callback cb, Button btnEpisodeList, Button btnPrevEp, Button btnNextEp) {
         this.cb = cb;
         this.btnEpisodeList = btnEpisodeList;
+        this.btnPrevEp = btnPrevEp;
         this.btnNextEp = btnNextEp;
+    }
+
+    /** 是否有上一集 */
+    public boolean hasPrev() {
+        return episodeList != null && currentEpIndex > 0;
     }
 
     /** 是否有下一集 */
@@ -88,7 +95,7 @@ public class EpisodeManager {
                             Log.d(TAG, "getEpisodeList 成功: " + episodeList.size() + " 集, currentIdx=" + currentEpIndex
                                     + " epNum=" + epNum + " itemGuid=" + itemGuid);
                             btnEpisodeList.setVisibility(View.VISIBLE);
-                            updateNextBtn();
+                            updateNavButtons();
                         }
                     }
 
@@ -100,6 +107,17 @@ public class EpisodeManager {
                 });
     }
 
+    /** 播放上一个剧集 */
+    public void playPrev() {
+        if (!hasPrev()) return;
+        PlayListItem prev = episodeList.get(currentEpIndex - 1);
+        currentEpIndex--;
+        currentGuid = prev.guid;
+        currentTitle = prev.title;
+        updateNavButtons();
+        cb.onSwitchEpisode(currentGuid, currentTitle);
+    }
+
     /** 播放下一个剧集 */
     public void playNext() {
         if (!hasNext()) return;
@@ -107,33 +125,30 @@ public class EpisodeManager {
         currentEpIndex++;
         currentGuid = next.guid;
         currentTitle = next.title;
-        updateNextBtn();
+        updateNavButtons();
         cb.onSwitchEpisode(currentGuid, currentTitle);
     }
 
-    /** 显示剧集选择器 */
+    /** 显示剧集选择抽屉（右侧抽屉样式） */
     public void showPicker() {
         if (episodeList == null || episodeList.isEmpty()) return;
-        final String[] items = new String[episodeList.size()];
+        java.util.List<SideDrawerHelper.Item> items = new java.util.ArrayList<>();
         for (int i = 0; i < episodeList.size(); i++) {
             PlayListItem ep = episodeList.get(i);
-            items[i] = "EP" + (ep.episodeNumber > 0 ? ep.episodeNumber : (i + 1))
-                    + "  " + (ep.title != null ? ep.title : "");
+            String title = "EP" + (ep.episodeNumber > 0 ? ep.episodeNumber : (i + 1));
+            items.add(new SideDrawerHelper.Item(title, ep.title != null ? ep.title : "", i == currentEpIndex));
         }
-        new android.app.AlertDialog.Builder(cb.getContext())
-                .setTitle("选择剧集")
-                .setItems(items, (dialog, which) -> {
-                    if (which >= 0 && which < episodeList.size()) {
-                        PlayListItem s = episodeList.get(which);
-                        currentEpIndex = which;
-                        currentGuid = s.guid;
-                        currentTitle = s.title;
-                        updateNextBtn();
-                        cb.onSwitchEpisode(currentGuid, currentTitle);
-                    }
-                })
-                .setNegativeButton("取消", null)
-                .show();
+        new SideDrawerHelper((android.app.Activity) cb.getContext()).show("选集", items,
+                null, null, null, null,
+                which -> {
+                    if (which < 0 || which >= episodeList.size()) return;
+                    PlayListItem s = episodeList.get(which);
+                    currentEpIndex = which;
+                    currentGuid = s.guid;
+                    currentTitle = s.title;
+                    updateNavButtons();
+                    cb.onSwitchEpisode(currentGuid, currentTitle);
+                }, null);
     }
 
     /** 重置状态（切换到新剧时调用） */
@@ -141,9 +156,12 @@ public class EpisodeManager {
         episodeList = null;
         currentEpIndex = -1;
         loadingEpisodes = false;
+        if (btnPrevEp != null) btnPrevEp.setVisibility(View.GONE);
+        if (btnNextEp != null) btnNextEp.setVisibility(View.GONE);
     }
 
-    private void updateNextBtn() {
-        btnNextEp.setVisibility(hasNext() ? View.VISIBLE : View.GONE);
+    private void updateNavButtons() {
+        if (btnPrevEp != null) btnPrevEp.setVisibility(hasPrev() ? View.VISIBLE : View.GONE);
+        if (btnNextEp != null) btnNextEp.setVisibility(hasNext() ? View.VISIBLE : View.GONE);
     }
 }

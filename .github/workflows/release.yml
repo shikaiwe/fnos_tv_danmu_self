@@ -1,0 +1,124 @@
+name: Build & Release
+
+# 推送 v* 标签时自动构建正式版并发布 Release，同时生成 update.json 供应用内"检查更新"使用
+# 也可在 Actions 页面手动触发（workflow_dispatch 仅构建验证，不发布）
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 完整历史，用于生成上一标签以来的变更日志
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::未配置仓库 Secret：SIGNING_KEYSTORE_BASE64（以及其他三个签名 Secret）"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > fntv-release.jks
+          {
+            echo "RELEASE_STORE_FILE=fntv-release.jks"
+            echo "RELEASE_STORE_PASSWORD=$STORE_PASSWORD"
+            echo "RELEASE_KEY_ALIAS=$KEY_ALIAS"
+            echo "RELEASE_KEY_PASSWORD=$KEY_PASSWORD"
+          } > local.properties
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Extract version from APK
+        id: ver
+        run: |
+          APK=$(ls app/build/outputs/apk/release/FNTV_release_*.apk)
+          AAPT2=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -V | tail -1)
+          BADGING=$("$AAPT2" dump badging "$APK")
+          VERSION_CODE=$(echo "$BADGING" | grep -o "versionCode='[0-9]*'" | head -1 | grep -o '[0-9]*')
+          VERSION_NAME=$(echo "$BADGING" | grep -o "versionName='[^']*'" | head -1 | sed "s/versionName='\(.*\)'/\1/")
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          echo "发布: v$VERSION_NAME (versionCode=$VERSION_CODE)"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PREV=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
+          if [ -n "$PREV" ]; then
+            LOG=$(git log --pretty=format:'%s' "$PREV..$TAG" | grep -v '^ci:' | head -20)
+          else
+            LOG=$(git log --pretty=format:'%s' -10 | grep -v '^ci:' | head -10)
+          fi
+          [ -z "$LOG" ] && LOG="稳定性优化与问题修复"
+          {
+            echo "changelog<<CHANGELOG_EOF"
+            echo "$LOG"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate update.json
+        env:
+          VERSION_CODE: ${{ steps.ver.outputs.code }}
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+        run: |
+          APK_NAME=$(basename "${{ steps.ver.outputs.apk }}")
+          APK_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${APK_NAME}"
+          jq -n --arg vc "$VERSION_CODE" --arg vn "$VERSION_NAME" \
+                --arg url "$APK_URL" --arg log "$CHANGELOG" \
+            '{versionCode: ($vc|tonumber), versionName: $vn, apkUrl: $url, changelog: $log, forceUpdate: false}' \
+            > update.json
+          cat update.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: FN TV v${{ steps.ver.outputs.name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            ${{ steps.ver.outputs.apk }}
+            update.json
+
+      # 应用内"检查更新"从仓库 master 分支读取 update.json，
+      # 通过 Contents API 把新生成的 update.json 提交回 master
+      - name: Update update.json on master
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${GITHUB_REPOSITORY}"
+          CONTENT=$(base64 -w0 update.json)
+          SHA=$(curl -sf -H "Authorization: token $GH_TOKEN" \
+                "https://api.github.com/repos/${REPO}/contents/update.json?ref=master" | jq -r '.sha // empty')
+          BODY=$(jq -n --arg msg "ci: update.json for ${GITHUB_REF_NAME}" \
+                      --arg content "$CONTENT" --arg sha "$SHA" \
+                '{message: $msg, content: $content, branch: "master",
+                  sha: (if $sha == "" then null else $sha end)}')
+          curl -sf -X PUT \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/contents/update.json" \
+            -d "$BODY" | jq -r '.commit.html_url'

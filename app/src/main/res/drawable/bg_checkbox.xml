@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CheckBox 自定义按钮样式 -->
+<!-- Kazumi 风格 CheckBox 自定义按钮样式 — 珊瑚粉勾选色 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_checked="true" android:state_focused="true">
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/bg_button_focused" />
+                    <solid android:color="@color/accent_primary_btn" />
                     <corners android:radius="4dp" />
-                    <stroke android:width="2dp" android:color="@color/border_focused" />
+                    <stroke android:width="2dp" android:color="@color/accent_light" />
                 </shape>
             </item>
             <item android:drawable="@android:drawable/checkbox_on_background" />
@@ -29,7 +29,7 @@
         <layer-list>
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="@color/bg_button_normal" />
+                    <solid android:color="@color/accent_primary_btn" />
                     <corners android:radius="4dp" />
                 </shape>
             </item>

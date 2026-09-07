@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-登录界面
-- ScrollView 包裹 → 横竖屏自适应
-- 深色背景，卡片式登录面板
-- 所有交互控件支持 DPAD 遥控器焦点导航
+登录界面 — Kazumi 风格重构
+- 渐变背景（顶部深色 → 底部更深）
+- 大圆角卡片，珊瑚粉强调色
+- DPAD 遥控器焦点导航
 - Android 4.4+ 兼容
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient_bottom"
     android:fillViewport="true"
     android:scrollbars="none">
 
@@ -25,32 +26,33 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:layout_margin="16dp"
+            android:layout_margin="20dp"
             android:background="@drawable/bg_card"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="28dp">
 
-            <!-- Logo / 图标区域 -->
+            <!-- Logo 区域：珊瑚粉渐变容器 -->
             <TextView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_marginBottom="12dp"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_btn_primary"
                 android:gravity="center"
                 android:text="FN"
                 android:textColor="@color/text_white"
-                android:textSize="22sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
-            <!-- 应用名称（无"飞牛影视"文字，仅用简洁图标） -->
+            <!-- 应用名称 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="28dp"
                 android:text="FN TV"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <!-- 服务器地址 -->
             <TextView
@@ -74,8 +76,8 @@
                 android:inputType="textUri"
                 android:nextFocusDown="@+id/etUser"
                 android:nextFocusForward="@+id/etUser"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHighlight="@color/colorAccent"
                 android:textSize="15sp" />
@@ -102,8 +104,8 @@
                 android:inputType="text"
                 android:nextFocusDown="@+id/etPass"
                 android:nextFocusUp="@+id/etHost"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHighlight="@color/colorAccent"
                 android:textSize="15sp" />
@@ -130,8 +132,8 @@
                 android:inputType="textPassword"
                 android:nextFocusDown="@+id/cbRemember"
                 android:nextFocusUp="@+id/etUser"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHighlight="@color/colorAccent"
                 android:textSize="15sp" />
@@ -141,19 +143,19 @@
                 android:id="@+id/cbRemember"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:background="@drawable/bg_input"
+                android:background="@drawable/bg_settings_item"
                 android:focusable="true"
                 android:nextFocusDown="@+id/btnLogin"
                 android:nextFocusUp="@+id/etPass"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp">
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
                 <CheckBox
                     android:id="@+id/cbRememberCheck"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    app:buttonTint="@color/colorAccent"
+                    app:buttonTint="@color/accent_primary_btn"
                     android:focusable="false"
                     android:text="记住密码"
                     android:textColor="@color/text_primary"
@@ -164,8 +166,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
                 android:background="@color/divider" />
 
             <!-- 登录按钮 -->

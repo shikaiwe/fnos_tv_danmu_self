@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Tab 按钮选择器 -->
+<!-- Kazumi 风格底部 Tab 选择器 — 选中深珊瑚红，聚焦珊瑚粉 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 选中+聚焦：亮边框，明显区分 -->
+    <!-- 选中+聚焦 -->
     <item android:state_selected="true" android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/bg_button_normal" />
-            <stroke android:width="2dp" android:color="#FF81C784" />
-            <corners android:radius="6dp" />
+            <solid android:color="@color/accent_primary_btn" />
+            <stroke android:width="2dp" android:color="@color/accent_light" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
+    <!-- 选中 -->
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/bg_button_normal" />
-            <corners android:radius="6dp" />
+            <solid android:color="@color/accent_primary_btn" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
+    <!-- 聚焦 -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/bg_input" />
-            <corners android:radius="6dp" />
+            <corners android:radius="10dp" />
             <stroke android:width="2dp" android:color="@color/border_focused" />
         </shape>
     </item>
+    <!-- 默认 -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/transparent" />
-            <corners android:radius="6dp" />
+            <corners android:radius="10dp" />
         </shape>
     </item>
 </selector>

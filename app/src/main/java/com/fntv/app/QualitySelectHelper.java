@@ -76,6 +76,11 @@ public class QualitySelectHelper {
 
     /** 加载画质列表并显示弹窗 */
     public void showQualityDialog() {
+        fetchQualities(this::showDialog);
+    }
+
+    /** 拉取画质列表；就绪后回调（options 已构建） */
+    private void fetchQualities(final Runnable onReady) {
         Map<String, Object> body = new HashMap<>();
         Map<String, Object> header = new HashMap<>();
         header.put("User-Agent", new String[]{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"});
@@ -113,7 +118,7 @@ public class QualitySelectHelper {
                 }
                 streamData = response.body().data;
                 options = buildOptions(streamData.qualities);
-                showDialog();
+                onReady.run();
             }
 
             @Override
@@ -121,6 +126,39 @@ public class QualitySelectHelper {
                 Log.e(TAG, "获取画质失败: " + t.getMessage());
             }
         });
+    }
+
+    /**
+     * 按目标分辨率高度选择画质档位（设置面板 480/720/1080/4K 按钮）
+     * 选项动态构建，若无已加载列表则先拉取；无更贴近的档位时保持不变
+     *
+     * @param targetHeight 目标分辨率高度（480/720/1080/2160）
+     */
+    public void selectQualityByHeight(final int targetHeight) {
+        if (options == null || options.isEmpty()) {
+            fetchQualities(() -> pickQualityByHeight(targetHeight));
+            return;
+        }
+        pickQualityByHeight(targetHeight);
+    }
+
+    private void pickQualityByHeight(int targetHeight) {
+        if (options == null || options.isEmpty()) return;
+        int best = -1;
+        int bestDiff = Integer.MAX_VALUE;
+        for (int i = 1; i < options.size(); i++) { // 0 固定为原画，跳过
+            QualityOption opt = options.get(i);
+            int diff = Math.abs(resToNum(opt.resolution) - targetHeight);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = i;
+            }
+        }
+        if (best < 0 || best == selectedIndex) return;
+        selectedIndex = best;
+        QualityOption selected = options.get(best);
+        prefs.edit().putInt("stream_quality_idx_" + qCallback.getMediaGuid(), selectedIndex).apply();
+        switchToQuality(selected);
     }
 
     /** 构建画质选项 */
@@ -176,16 +214,16 @@ public class QualitySelectHelper {
     private void showDialog() {
         if (options == null || options.isEmpty()) return;
 
-        final String[] items = new String[options.size()];
+        java.util.List<SideDrawerHelper.Item> items = new java.util.ArrayList<>();
         for (int i = 0; i < options.size(); i++) {
             QualityOption opt = options.get(i);
-            String check = (i == selectedIndex) ? " ✓" : "";
-            items[i] = opt.label + check;
+            String sub = opt.isOriginal ? "原始文件" : (opt.resolution != null ? opt.resolution : "");
+            items.add(new SideDrawerHelper.Item(opt.label, sub, i == selectedIndex));
         }
 
-        new AlertDialog.Builder(activity)
-                .setTitle("画质选择")
-                .setItems(items, (dialog, which) -> {
+        new SideDrawerHelper(activity).show("画质", items,
+                null, null, null, null,
+                which -> {
                     if (which < 0 || which >= options.size() || which == selectedIndex) return;
                     selectedIndex = which;
                     QualityOption selected = options.get(which);
@@ -195,9 +233,7 @@ public class QualitySelectHelper {
                     } else {
                         switchToQuality(selected);
                     }
-                })
-                .setNegativeButton("关闭", null)
-                .show();
+                }, null);
     }
 
     /** 非原画：调 play/play 获取新链接后切换 */

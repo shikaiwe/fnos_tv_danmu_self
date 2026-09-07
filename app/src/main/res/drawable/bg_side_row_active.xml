@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 抽屉列表选中行 — 蓝色描边高亮（参考图"关闭"选中态） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#33202A38" />
+    <stroke android:width="2dp" android:color="#4C8DFF" />
+    <corners android:radius="14dp" />
+</shape>

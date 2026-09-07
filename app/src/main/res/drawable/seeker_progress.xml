@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Kazumi 风格进度条 — 珊瑚粉已播放，柔和灰缓冲 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
         <shape>
             <solid android:color="#33FFFFFF" />
-            <corners android:radius="3dp" />
+            <corners android:radius="2dp" />
         </shape>
+    </item>
+    <item android:id="@android:id/secondaryProgress">
+        <clip>
+            <shape>
+                <solid android:color="#4DFFFFFF" />
+                <corners android:radius="2dp" />
+            </shape>
+        </clip>
     </item>
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="#3370FF" />
-                <corners android:radius="3dp" />
+                <solid android:color="@color/colorAccent" />
+                <corners android:radius="2dp" />
             </shape>
         </clip>
     </item>

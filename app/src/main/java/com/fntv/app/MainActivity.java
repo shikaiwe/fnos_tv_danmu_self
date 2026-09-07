@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(Color.TRANSPARENT);
-            getWindow().setNavigationBarColor(0xFF1A1A1A);
+            getWindow().setNavigationBarColor(getColor(R.color.bg_dark));
         }
 
         prefs = getSharedPreferences("fntv_prefs", MODE_PRIVATE);
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         btn.setLayoutParams(new LinearLayout.LayoutParams(0, (int)(27 * density), 1));
         btn.setBackgroundResource(R.drawable.bg_input);
         btn.setText(text);
-        btn.setTextColor(0xFFEEEEEE);
+        btn.setTextColor(getColor(R.color.text_primary));
         btn.setTextSize(13);
         btn.setFocusable(true);
         btn.setPadding(8, 0, 8, 0);
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
         etHost.setHint(hostHint);
         etHost.setInputType(hostInputType);
         etHost.setPadding((int)(12 * density), 0, (int)(12 * density), 0);
-        etHost.setTextColor(0xFFEEEEEE);
+        etHost.setTextColor(getColor(R.color.text_primary));
         etHost.setTextSize(15);
         int hostId = View.generateViewId();
         etHost.setId(hostId);
@@ -270,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
         etUser.setHint("输入用户名");
         etUser.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
         etUser.setPadding((int)(12 * density), 0, (int)(12 * density), 0);
-        etUser.setTextColor(0xFFEEEEEE);
+        etUser.setTextColor(getColor(R.color.text_primary));
         etUser.setTextSize(15);
         int userId = View.generateViewId();
         etUser.setId(userId);
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
         etPass.setInputType(android.text.InputType.TYPE_CLASS_TEXT
                 | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
         etPass.setPadding((int)(12 * density), 0, (int)(12 * density), 0);
-        etPass.setTextColor(0xFFEEEEEE);
+        etPass.setTextColor(getColor(R.color.text_primary));
         etPass.setTextSize(15);
         int passId = View.generateViewId();
         etPass.setId(passId);
@@ -312,14 +312,14 @@ public class MainActivity extends AppCompatActivity {
         cb.setLayoutParams(cbLp);
         cb.setFocusable(false);
         cb.setText("记住密码");
-        cb.setTextColor(0xFFEEEEEE);
+        cb.setTextColor(getColor(R.color.text_primary));
         cb.setTextSize(14);
         cb.setId(View.generateViewId());
         try {
             android.graphics.drawable.Drawable d = cb.getButtonDrawable();
             if (d != null) {
                 d = androidx.core.graphics.drawable.DrawableCompat.wrap(d);
-                androidx.core.graphics.drawable.DrawableCompat.setTint(d.mutate(), 0xFF3370FF);
+                androidx.core.graphics.drawable.DrawableCompat.setTint(d.mutate(), getColor(R.color.channel_green));
                 cb.setButtonDrawable(d);
             }
         } catch (Exception ignored) {}
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         tv.setPadding(0, 0, 0, (int)(4 * density));
         tv.setText(text);
-        tv.setTextColor(0xFFB0B0B0);
+        tv.setTextColor(getColor(R.color.text_secondary));
         tv.setTextSize(12);
         return tv;
     }
@@ -399,11 +399,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateModeColor() {
         if (isFnIdMode) {
-            btnHttpMode.setTextColor(0xFF808080);
-            btnFnIdMode.setTextColor(0xFFEEEEEE);
+            btnHttpMode.setTextColor(getColor(R.color.text_secondary));
+            btnFnIdMode.setTextColor(getColor(R.color.text_primary));
         } else {
-            btnHttpMode.setTextColor(0xFFEEEEEE);
-            btnFnIdMode.setTextColor(0xFF808080);
+            btnHttpMode.setTextColor(getColor(R.color.text_primary));
+            btnFnIdMode.setTextColor(getColor(R.color.text_secondary));
         }
     }
 

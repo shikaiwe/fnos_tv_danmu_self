@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 危险操作按钮背景 — 红色调（退出登录等） -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true" android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFC62828" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFD32F2F" />
+            <corners android:radius="12dp" />
+            <stroke android:width="2dp" android:color="#FFEF9A9A" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFC62828" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFE94560" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</selector>

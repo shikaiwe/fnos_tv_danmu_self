@@ -29,11 +29,10 @@ public class UpdateManager {
 
     /** 更新源（按优先级） */
     private static final String[] UPDATE_URLS = {
-            "https://raw.giteeusercontent.com/coffee710/fntv/raw/master/update.json",
-            "https://jsd.onmicrosoft.cn/gh/rgcaafe/fnos_tv_danmu@master/update.json",
-            "https://cdn.jsdelivr.net/gh/rgcaafe/fnos_tv_danmu@master/update.json",
-            "https://fastly.jsdelivr.net/gh/rgcaafe/fnos_tv_danmu@master/update.json",
-            "https://raw.githubusercontent.com/rgcaafe/fnos_tv_danmu/master/update.json"
+            "https://jsd.onmicrosoft.cn/gh/shikaiwe/fnos_tv_danmu_self@master/update.json",
+            "https://cdn.jsdelivr.net/gh/shikaiwe/fnos_tv_danmu_self@master/update.json",
+            "https://fastly.jsdelivr.net/gh/shikaiwe/fnos_tv_danmu_self@master/update.json",
+            "https://raw.githubusercontent.com/shikaiwe/fnos_tv_danmu_self/master/update.json"
     };
 
     private static final String TAG = "Update";
@@ -170,20 +169,48 @@ public class UpdateManager {
 
     // ========== 下载 ==========
 
+    /** APK 下载加速镜像（前缀代理），空串为 GitHub 直连兜底；国内网络优先走镜像 */
+    private static final String[] APK_MIRRORS = {
+            "https://ghproxy.net/",
+            "https://gh-proxy.com/",
+            "https://ghfast.top/",
+            ""
+    };
+
     private void downloadAndInstall(final String apkUrl, final int remoteVersion, final boolean isTestInstall) {
         btnCheckUpdate.setText(isTestInstall ? "测试中..." : "下载中...");
         btnCheckUpdate.setEnabled(false);
         new Thread(() -> {
+            HttpURLConnection conn = null;
+            InputStream is = null;
             try {
-                HttpURLConnection c = (HttpURLConnection) new URL(apkUrl).openConnection();
-                c.setConnectTimeout(15000);
-                c.setReadTimeout(30000);
-                c.setInstanceFollowRedirects(true);
-                c.connect();
-                int respCode = c.getResponseCode();
-                if (respCode != 200) {
+                // 依次尝试镜像与直连，直到某个源返回 200
+                for (String mirror : APK_MIRRORS) {
+                    String url = mirror + apkUrl;
+                    try {
+                        Log.d(TAG, "尝试下载源: " + url);
+                        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+                        c.setConnectTimeout(10000);
+                        c.setReadTimeout(30000);
+                        c.setInstanceFollowRedirects(true);
+                        c.connect();
+                        int respCode = c.getResponseCode();
+                        if (respCode == 200) {
+                            Log.d(TAG, "下载源可用: " + (mirror.isEmpty() ? "GitHub 直连" : mirror));
+                            conn = c;
+                            is = c.getInputStream();
+                            break;
+                        }
+                        Log.w(TAG, "下载源返回 " + respCode + ": " + url);
+                        c.disconnect();
+                    } catch (Exception e) {
+                        Log.w(TAG, "下载源不可用: " + url + " (" + e.getClass().getSimpleName() + ")");
+                    }
+                }
+
+                if (is == null) {
                     activity.runOnUiThread(() -> {
-                        Toast.makeText(activity, "下载失败，服务器返回 " + respCode, Toast.LENGTH_LONG).show();
+                        Toast.makeText(activity, "下载失败，所有下载源均不可用，请稍后重试或到 GitHub Releases 手动下载", Toast.LENGTH_LONG).show();
                         resetBtn();
                     });
                     return;
@@ -193,7 +220,6 @@ public class UpdateManager {
                 if (!dir.exists()) dir.mkdirs();
                 final File apkFile = new File(dir, "FNTV_v" + remoteVersion + ".apk");
 
-                InputStream is = c.getInputStream();
                 FileOutputStream fos = new FileOutputStream(apkFile);
                 byte[] buf = new byte[8192];
                 int n;
@@ -235,6 +261,11 @@ public class UpdateManager {
                     Toast.makeText(activity, "下载失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     resetBtn();
                 });
+            } finally {
+                if (is != null) {
+                    try { is.close(); } catch (Exception ignored) {}
+                }
+                if (conn != null) conn.disconnect();
             }
         }).start();
     }

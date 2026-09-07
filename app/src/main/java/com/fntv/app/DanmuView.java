@@ -11,6 +11,10 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +31,7 @@ public class DanmuView extends View {
     private volatile float playTime = 0;
     private int maxActive = 40;
     private float speedMul = 1f;
-    private float opacity = 0.85f;
+    private float opacity = 0.80f;
     private int areaPct = 35;
     private float fontSize = 22f;
     private boolean showOutline = true;
@@ -37,6 +41,8 @@ public class DanmuView extends View {
     private boolean showTop = true;
     private boolean showBottom = true;
     private int danmuOffset = 0;
+    // 控制栏遮挡区域高度（px），控制栏显示时弹幕自动避开底部
+    private int bottomAvoidPx = 0;
     private final List<DanmuItem> activeScroll = new ArrayList<>();
     private final List<DanmuItem> activeStatic = new ArrayList<>();
     private DanmuItem pausedItem = null;
@@ -74,6 +80,39 @@ public class DanmuView extends View {
     private boolean customFps = false;
     public void setCustomFps(boolean v) { customFps = v; }
     public void setDanmuOffset(int v) { danmuOffset = v; }
+    /** 设置控制栏遮挡高度(px)，控制栏显示时弹幕自动避开底部区域 */
+    public void setControllerBottomAvoid(int px) { bottomAvoidPx = Math.max(0, px); }
+
+    /** 弹幕开启时播放滑入动画（从底部向上淡入） */
+    public void showWithAnim() {
+        if (getVisibility() == View.VISIBLE) return;
+        setVisibility(View.VISIBLE);
+        AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+        fadeIn.setDuration(350);
+        fadeIn.setFillAfter(true);
+        TranslateAnimation slideUp = new TranslateAnimation(
+                Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, 0f,
+                Animation.RELATIVE_TO_SELF, 1f, Animation.RELATIVE_TO_SELF, 0f);
+        slideUp.setDuration(350);
+        slideUp.setFillAfter(true);
+        AnimationSet set = new AnimationSet(false);
+        set.addAnimation(fadeIn);
+        set.addAnimation(slideUp);
+        startAnimation(set);
+    }
+
+    /** 弹幕关闭时播放淡出动画 */
+    public void hideWithAnim() {
+        AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
+        fadeOut.setDuration(250);
+        fadeOut.setFillAfter(true);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override public void onAnimationStart(Animation a) {}
+            @Override public void onAnimationEnd(Animation a) { setVisibility(View.GONE); }
+            @Override public void onAnimationRepeat(Animation a) {}
+        });
+        startAnimation(fadeOut);
+    }
 
     @Override
     public boolean onTouchEvent(android.view.MotionEvent event) {
@@ -427,11 +466,13 @@ public class DanmuView extends View {
 
     /**
      * 底部固定弹幕：从屏幕底部往上找空行，最多3行，不受显示区域限制
-     * row0 = 屏幕最底部, row1 = 往上一行, row2 = 再往上一行
+     * 考虑控制栏遮挡高度 bottomAvoidPx，避免弹幕被控制栏遮盖
      */
     private float findStaticRowBottom(int screenH, float lnH, int maxRow) {
+        // 底部可用区域 = 屏幕高度 - 控制栏遮挡高度
+        int effectiveH = screenH - bottomAvoidPx;
         for (int attempt = 0; attempt < maxRow; attempt++) {
-            float rowY = screenH - lnH * 0.2f - attempt * lnH;
+            float rowY = effectiveH - lnH * 0.2f - attempt * lnH;
             boolean blocked = false;
             for (DanmuItem a : activeStatic) {
                 if (Math.abs(a.y - rowY) < lnH * 0.5f) {
@@ -522,7 +563,7 @@ public class DanmuView extends View {
             // 文字
             Paint infoPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             infoPaint.setTextSize(14 * screenDensity);
-            infoPaint.setColor(0xFFCCCCCC);
+            infoPaint.setColor(getContext().getColor(R.color.text_secondary));
             c.drawText(info, bgX + 12 * screenDensity, bgY + textH + 2 * screenDensity, infoPaint);
         }
     }

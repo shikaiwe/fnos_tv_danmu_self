@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部双层 Tab 设置面板 — Kazumi 风格 -->
+<!-- 底部双层 Tab 设置面板 — 右侧抽屉样式（与参考图二级菜单统一） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/settingsPanel"
+    android:layout_width="380dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="end"
+    android:orientation="vertical"
+    android:background="@drawable/bg_side_panel"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:visibility="gone">
+
+
+    <!-- Tab 栏 -->
+    <LinearLayout
+        android:id="@+id/tabBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="12dp">
+
+        <Button
+            android:id="@+id/tabPlay"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginRight="4dp"
+            android:background="@drawable/bg_chip"
+            android:text="播放"
+            android:textColor="@color/text_white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:focusable="true"
+            android:nextFocusRight="@+id/tabQuality" />
+
+        <Button
+            android:id="@+id/tabQuality"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:background="@drawable/bg_chip"
+            android:text="画质"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:focusable="true"
+            android:nextFocusLeft="@+id/tabPlay"
+            android:nextFocusRight="@+id/tabSubtitle" />
+
+        <Button
+            android:id="@+id/tabSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:background="@drawable/bg_chip"
+            android:text="字幕"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:focusable="true"
+            android:nextFocusLeft="@+id/tabQuality"
+            android:nextFocusRight="@+id/tabDanmu" />
+
+        <Button
+            android:id="@+id/tabDanmu"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="4dp"
+            android:background="@drawable/bg_chip"
+            android:text="弹幕"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:focusable="true"
+            android:nextFocusLeft="@+id/tabSubtitle" />
+
+    </LinearLayout>
+
+    <!-- Tab 内容区域 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- ===== 播放 Tab 内容 ===== -->
+        <LinearLayout
+            android:id="@+id/tabContentPlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <!-- 播放速度 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="播放速度"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_speed"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <Button
+                    android:id="@+id/btnSpeed1x"
+                    android:layout_width="48dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="0.5x"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:focusable="true"
+                    android:nextFocusRight="@+id/btnSpeed10x" />
+
+                <Button
+                    android:id="@+id/btnSpeed10x"
+                    android:layout_width="48dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="1.0x"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnSpeed1x"
+                    android:nextFocusRight="@+id/btnSpeed15x" />
+
+                <Button
+                    android:id="@+id/btnSpeed15x"
+                    android:layout_width="48dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="1.5x"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnSpeed10x"
+                    android:nextFocusRight="@+id/btnSpeed20x" />
+
+                <Button
+                    android:id="@+id/btnSpeed20x"
+                    android:layout_width="48dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="2.0x"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnSpeed15x" />
+
+            </LinearLayout>
+
+            <!-- 画面比例 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="画面比例"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_quality"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <Button
+                    android:id="@+id/btnRatioOriginal"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="原始"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusRight="@+id/btnRatio169" />
+
+                <Button
+                    android:id="@+id/btnRatio169"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="16:9"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnRatioOriginal"
+                    android:nextFocusRight="@+id/btnRatioFill" />
+
+                <Button
+                    android:id="@+id/btnRatioFill"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="填充"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnRatio169"
+                    android:nextFocusRight="@+id/btnRatioCrop" />
+
+                <Button
+                    android:id="@+id/btnRatioCrop"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="裁剪"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnRatioFill" />
+
+            </LinearLayout>
+
+            <!-- 锁定画面 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="锁定画面"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_lock_off"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <Switch
+                    android:id="@+id/switchLock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/switchAutoNext" />
+
+            </LinearLayout>
+
+            <!-- 自动下一集 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="自动下一集"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_episode"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <Switch
+                    android:id="@+id/switchAutoNext"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/switchLock"
+                    android:nextFocusDown="@+id/btnCloseSettings" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ===== 画质 Tab 内容 ===== -->
+        <LinearLayout
+            android:id="@+id/tabContentQuality"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- 当前画质 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="当前画质"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_quality"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvCurrentQuality"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textColor="@color/colorAccent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- 清晰度选择 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="清晰度"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/btnQualityLow"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="480"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusRight="@+id/btnQualityNormal" />
+
+                <Button
+                    android:id="@+id/btnQualityNormal"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="720"
+                    android:textColor="@color/text_white"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnQualityLow"
+                    android:nextFocusRight="@+id/btnQualityHD" />
+
+                <Button
+                    android:id="@+id/btnQualityHD"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="1080"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnQualityNormal"
+                    android:nextFocusRight="@+id/btnQuality4K" />
+
+                <Button
+                    android:id="@+id/btnQuality4K"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="4K"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/btnQualityHD" />
+
+            </LinearLayout>
+
+            <!-- HDR 开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="HDR"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <Switch
+                    android:id="@+id/switchHdr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/switchAnime4K" />
+
+            </LinearLayout>
+
+            <!-- Anime4K 超分开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Anime4K 超分"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <Switch
+                    android:id="@+id/switchAnime4K"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/switchHdr"
+                    android:nextFocusDown="@+id/btnAnimeQualityFast" />
+
+            </LinearLayout>
+
+            <!-- Anime4K 超分档位 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="超分档位"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/btnAnimeQualityFast"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="快速"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/switchAnime4K"
+                    android:nextFocusRight="@+id/btnAnimeQualityBalanced" />
+
+                <Button
+                    android:id="@+id/btnAnimeQualityBalanced"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="平衡"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/switchAnime4K"
+                    android:nextFocusLeft="@+id/btnAnimeQualityFast"
+                    android:nextFocusRight="@+id/btnAnimeQualityHigh" />
+
+                <Button
+                    android:id="@+id/btnAnimeQualityHigh"
+                    android:layout_width="52dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_chip"
+                    android:text="高质量"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:focusable="true"
+                    android:nextFocusUp="@+id/switchAnime4K"
+                    android:nextFocusLeft="@+id/btnAnimeQualityBalanced"
+                    android:nextFocusDown="@+id/btnCloseSettings" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ===== 字幕 Tab 内容 ===== -->
+        <LinearLayout
+            android:id="@+id/tabContentSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- 当前字幕 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="当前字幕"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_info"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvCurrentSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="关闭"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <!-- 字幕开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="显示字幕"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <Switch
+                    android:id="@+id/switchSubtitleVisible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/btnSubtitleTrackEntry" />
+
+            </LinearLayout>
+
+            <!-- 选择字幕轨入口 -->
+            <Button
+                android:id="@+id/btnSubtitleTrackEntry"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_chip"
+                android:text="选择字幕轨"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:nextFocusUp="@+id/switchSubtitleVisible"
+                android:nextFocusDown="@+id/btnSubtitleStyleEntry" />
+
+            <!-- 字幕样式入口 -->
+            <Button
+                android:id="@+id/btnSubtitleStyleEntry"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_chip"
+                android:text="字幕样式设置"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:nextFocusUp="@+id/btnSubtitleTrackEntry"
+                android:nextFocusDown="@+id/btnCloseSettings" />
+
+        </LinearLayout>
+
+        <!-- ===== 弹幕 Tab 内容 ===== -->
+        <LinearLayout
+            android:id="@+id/tabContentDanmu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- 弹幕开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="弹幕开关"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:drawableStart="@drawable/ic_danmu_on"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/text_secondary" />
+
+                <Switch
+                    android:id="@+id/switchDanmu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusDown="@+id/btnDanmuSettingsEntry" />
+
+            </LinearLayout>
+
+            <!-- 弹幕类型快捷开关 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="滚动弹幕"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <Switch
+                    android:id="@+id/switchDanmuScroll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusRight="@+id/switchDanmuTop" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="顶部弹幕"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <Switch
+                    android:id="@+id/switchDanmuTop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/switchDanmuScroll"
+                    android:nextFocusRight="@+id/switchDanmuBottom" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="底部弹幕"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <Switch
+                    android:id="@+id/switchDanmuBottom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:nextFocusLeft="@+id/switchDanmuTop"
+                    android:nextFocusDown="@+id/btnDanmuSettingsEntry" />
+
+            </LinearLayout>
+
+            <!-- 进入完整弹幕设置 -->
+            <Button
+                android:id="@+id/btnDanmuSettingsEntry"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_chip"
+                android:text="完整弹幕设置"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:nextFocusUp="@+id/switchDanmuBottom"
+                android:nextFocusDown="@+id/btnCloseSettings" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    </ScrollView>
+
+    <!-- 关闭按钮 -->
+    <Button
+        android:id="@+id/btnCloseSettings"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_chip"
+        android:text="关闭"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:focusable="true" />
+</LinearLayout>
