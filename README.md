@@ -74,7 +74,8 @@ git push origin v1.0.1   # 自动触发构建发布
 - [**rgcaafe/fnos_tv_danmu**](https://github.com/rgcaafe/fnos_tv_danmu) — 原始项目，本项目基于其二次开发
 - [**fntv-electron**](https://github.com/QiaoKes/fntv-electron) — 飞牛影视 API 接口逻辑参考
 - [**Danmu API**](https://github.com/huangxd-/danmu_api) — 弹幕数据服务
-- [**mpv / mpv-android**](https://github.com/mpv-android/mpv-android) · [**Anime4K**](https://github.com/bloc97/Anime4K)
+- [**mpv / mpv-android**](https://github.com/mpv-android/mpv-android) 
+- [**Anime4K**](https://github.com/bloc97/Anime4K)
 
 ## ⚠️ 声明
 
