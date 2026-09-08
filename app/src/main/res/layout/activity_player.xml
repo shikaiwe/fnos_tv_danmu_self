@@ -53,7 +53,7 @@
             android:minWidth="0dp"
             android:padding="10dp"
             android:text=""
-            android:nextFocusRight="@+id/btnSkip"
+            android:nextFocusRight="@+id/btnSettings"
             android:nextFocusDown="@+id/seekBar" />
 
         <!-- 标题: 白色 18sp 加粗（参考图样式） -->
@@ -100,23 +100,7 @@
                 android:textSize="14sp"
                 android:visibility="gone" />
 
-            <!-- 跳过片头尾: 幽灵图标 -->
-            <Button
-                android:id="@+id/btnSkip"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="4dp"
-                android:background="@drawable/bg_icon_ghost"
-                android:focusable="true"
-                android:gravity="center"
-                android:minHeight="0dp"
-                android:minWidth="0dp"
-                android:padding="8dp"
-                android:text=""
-                android:textSize="12sp"
-                android:nextFocusLeft="@+id/btnBrightness"
-                android:nextFocusRight="@+id/btnSettings"
-                android:nextFocusDown="@+id/seekBar" />
+            <!-- 跳过片头尾入口已整合进设置面板（播放 Tab，见 panel_settings_bottom.xml btnSkipEntry） -->
 
             <!-- 亮度: 幽灵图标（默认隐藏） -->
             <Button
@@ -132,7 +116,6 @@
                 android:padding="8dp"
                 android:text=""
                 android:textSize="12sp"
-                android:nextFocusLeft="@+id/btnSkip"
                 android:nextFocusRight="@+id/btnSettings"
                 android:visibility="gone" />
 
@@ -150,7 +133,7 @@
                 android:padding="8dp"
                 android:text=""
                 android:textSize="12sp"
-                android:nextFocusLeft="@+id/btnSkip"
+                android:nextFocusLeft="@+id/btnBrightness"
                 android:nextFocusRight="@+id/btnInfo"
                 android:nextFocusDown="@+id/seekBar" />
 
@@ -245,7 +228,9 @@
                 android:progress="0"
                 android:focusable="true"
                 android:nextFocusDown="@+id/btnPlayPause"
-                android:background="@drawable/seekbar_bg_focus"
+                android:defaultFocusHighlightEnabled="false"
+                android:background="@null"
+                android:splitTrack="false"
                 android:progressDrawable="@drawable/seeker_progress_minimal"
                 android:thumb="@drawable/seeker_thumb_minimal"
                 android:paddingTop="4dp"
@@ -512,14 +497,18 @@
     <!-- Layer 8.1: 锁定遮罩层（四角角标，锁定后显示） -->
     <include layout="@layout/view_lock_overlay" android:id="@+id/lockOverlay" />
 
-    <!-- Layer 8.5: 底部设置面板（双层 Tab） -->
+    <!-- 设置面板外部点击遮罩：拦截播放器手势并关闭右侧面板 -->
+    <View
+        android:id="@+id/settingsBackdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="false"
+        android:visibility="gone" />
+
+    <!-- Layer 8.5: 底部设置面板（双层 Tab）；弹幕/字幕/跳过设置已迁移为 SideDrawerHelper 右侧抽屉 -->
     <include layout="@layout/panel_settings_bottom" />
-
-    <!-- Layer 8.6: 弹幕设置面板（底部滑出） -->
-    <include layout="@layout/panel_danmu_settings" />
-
-    <!-- Layer 8.7: 字幕设置面板（底部滑出） -->
-    <include layout="@layout/panel_subtitle_settings" />
 
     <!-- Layer 9: 视频加载/错误状态浮层 -->
     <include layout="@layout/view_loading_overlay" android:id="@+id/loadingOverlay" />

@@ -95,6 +95,8 @@ public class PlayerGestureHelper implements View.OnTouchListener {
     /** 长按倍速定时器 */
     private final android.os.Handler longPressHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private boolean longPressing = false;
+    /** 当前触摸序列是否已触发长按，用于阻止松手事件被延迟识别为单击 */
+    private boolean longPressTriggered = false;
     /** 三指检测 */
     private int recentTouchCount = 0;
     private long lastTouchEventTime = 0;
@@ -118,8 +120,14 @@ public class PlayerGestureHelper implements View.OnTouchListener {
 
         gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                // onSingleTapConfirmed：确认不是双击的第一下后才回调，避免与双击暂停/播放冲突
+                // 长按使用独立定时器识别，必须显式吞掉同一触摸序列迟到的单击确认。
+                if (longPressTriggered) return true;
                 if (callback != null) callback.onSingleTap();
                 return true;
             }
@@ -148,6 +156,11 @@ public class PlayerGestureHelper implements View.OnTouchListener {
         int pointerCount = event.getPointerCount();
         if (view.getWidth() > 0) viewWidth = view.getWidth();
 
+        // 多指加入（含三指手势入口）：取消单指长按倍速定时器，避免多指操作误触发临时倍速
+        if (action == MotionEvent.ACTION_POINTER_DOWN) {
+            longPressHandler.removeCallbacksAndMessages(null);
+        }
+
         // 三指手势检测
         if (pointerCount >= 3) {
             handleThreeFingerGesture(event, action, pointerCount, view);
@@ -167,6 +180,7 @@ public class PlayerGestureHelper implements View.OnTouchListener {
                     currentGesture = GestureType.NONE;
                     gestureActive = false;
                     longPressing = false;
+                    longPressTriggered = false;
                     // 启动长按倍速定时器
                     scheduleLongPress();
                 }
@@ -300,6 +314,7 @@ public class PlayerGestureHelper implements View.OnTouchListener {
     private void scheduleLongPress() {
         longPressHandler.removeCallbacksAndMessages(null);
         longPressHandler.postDelayed(() -> {
+            longPressTriggered = true;
             longPressing = true;
             if (callback != null) callback.onLongPressSpeed(true);
         }, LONG_PRESS_DELAY_MS);

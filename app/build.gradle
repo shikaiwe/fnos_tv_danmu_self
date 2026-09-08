@@ -18,12 +18,12 @@ android {
         applicationId "com.fntv.app"
         minSdkVersion 26        // libmpv AAR 硬编码 minSdkVersion=26，必须提升
         targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
-        buildConfigField "int", "VERSION_CODE", "1"
-        buildConfigField "String", "VERSION_NAME", '"1.0"'
+        buildConfigField "int", "VERSION_CODE", "2"
+        buildConfigField "String", "VERSION_NAME", '"1.0.1"'
 
         // NDK 配置：支持 armeabi-v7a 和 arm64-v8a
         ndk {

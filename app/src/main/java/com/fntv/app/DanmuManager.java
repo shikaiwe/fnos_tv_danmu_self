@@ -156,6 +156,11 @@ public class DanmuManager {
         });
     }
 
+    /** 静默记录加载过程日志（不弹顶部胶囊，仅出错时才需要提示用户） */
+    private void logStatus(String msg) {
+        Log.d(TAG, "[弹幕] " + msg);
+    }
+
     /** 更新弹幕匹配名显示 */
     private void updateDanmuMatchDisplay(String name) {
         danmuMatchedName = name != null ? name : "";
@@ -179,7 +184,7 @@ public class DanmuManager {
         pendingDanmuTitle = title;
         pendingDanmuGuid = guid;
         if (!danmuOn) {
-            showDanmuStatus("弹幕: 已关闭，" + title + " 待匹配");
+            logStatus("弹幕: 已关闭，" + title + " 待匹配");
             return;
         }
         if (danmuUrl.isEmpty() || title == null) {
@@ -203,7 +208,7 @@ public class DanmuManager {
                     if (parts.length == 2) {
                         final int cachedAid = Integer.parseInt(parts[0]);
                         final String cachedName = parts[1];
-                        showDanmuStatus("弹幕: 缓存命中 " + cachedName + "，匹配第" + fTargetEp + "集...");
+                        logStatus("弹幕: 缓存命中 " + cachedName + "，匹配第" + fTargetEp + "集...");
                         Log.d(TAG, "缓存命中: " + data.getItemTV() + " -> " + cachedName + " (aid=" + cachedAid + ")");
                         new Thread(() -> {
                             try {
@@ -295,64 +300,14 @@ public class DanmuManager {
         handler.removeCallbacksAndMessages(null);
     }
 
-    // ========== 弹幕设置对话框 ==========
-
-    /** 显示弹幕设置弹窗 */
-    public void showSettings() {
-        SharedPreferences p = prefs;
-        final android.app.Dialog dialog = new android.app.Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
-        dialog.setContentView(R.layout.dialog_danmu_settings);
-        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xDD1B201B));
-        int screenH = activity.getResources().getDisplayMetrics().heightPixels;
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, (int) (screenH * 0.9f));
-        View root = dialog.getWindow().getDecorView();
-
-        final Switch sw = dialog.findViewById(R.id.dm_sw);
-        sw.setChecked(p.getBoolean("danmu_on", true));
-
-        final Switch swScroll = dialog.findViewById(R.id.dm_show_scroll);
-        final Switch swTop = dialog.findViewById(R.id.dm_show_top);
-        final Switch swBottom = dialog.findViewById(R.id.dm_show_bottom);
-        swScroll.setChecked(p.getBoolean("danmu_scroll", true));
-        swTop.setChecked(p.getBoolean("danmu_top", true));
-        swBottom.setChecked(p.getBoolean("danmu_bottom", true));
-
-        final Switch swCustomFps = dialog.findViewById(R.id.dm_custom_fps);
-        swCustomFps.setChecked(p.getBoolean("danmu_custom_fps", false));
-
-        final Switch swTimeScale = dialog.findViewById(R.id.dm_time_scale);
-        swTimeScale.setChecked(p.getBoolean("danmu_time_scale", false));
-
-        final Button matchBtn = dialog.findViewById(R.id.dm_matchBtn);
-        matchBtn.setOnClickListener(v -> {
-            dialog.dismiss();
-            showDanmuSearch();
-        });
-
-        final Button listBtn = dialog.findViewById(R.id.dm_listBtn);
-        listBtn.setOnClickListener(v -> {
-            dialog.dismiss();
-            showDanmuList();
-        });
-
-        setupSliders(root);
-        final Switch olSw = dialog.findViewById(R.id.dm_outline);
-        olSw.setChecked(p.getBoolean("danmu_outline", true));
-
-        dialog.findViewById(R.id.dm_cancel).setOnClickListener(v -> dialog.dismiss());
-        dialog.findViewById(R.id.dm_ok).setOnClickListener(v -> {
-            applyDanmuSettingsFromControls(root, sw, swScroll, swTop, swBottom, swCustomFps, swTimeScale, olSw);
-            dialog.dismiss();
-        });
-        dialog.show();
-    }
+    // ========== 弹幕设置面板 ==========
 
     /**
-     * 接线底部弹幕设置面板（panel_danmu_settings.xml）。
-     * 开关实时生效，滑条修改在点击「确认」后统一生效。
+     * 接线弹幕设置抽屉（panel_danmu_content.xml，经 SettingsPanelManager 的
+     * SideDrawerHelper 抽屉展示）。开关实时生效，滑条修改在点击「确认」后统一生效。
      *
-     * @param root       面板根视图
-     * @param closePanel 关闭面板回调（由持有 SettingsPanelManager 的调用方提供）
+     * @param root       抽屉内容根视图
+     * @param closePanel 关闭抽屉回调（由持有 SettingsPanelManager 的调用方提供）
      */
     public void bindSettingsPanel(View root, Runnable closePanel) {
         if (root == null || danmuView == null) return;
@@ -915,7 +870,7 @@ public class DanmuManager {
     }
 
     private void loadDanmuById(int animeId, String animeName) {
-        showDanmuStatus("弹幕: 正在加载...");
+        logStatus("弹幕: 正在加载...");
         new Thread(() -> {
             try {
                 URL u = new URL(danmuUrl + "/api/v2/bangumi/" + animeId);
@@ -1037,7 +992,7 @@ public class DanmuManager {
 
     private void loadDanmuByEp(int epId, String epName) {
         updateDanmuMatchDisplay(epName);
-        showDanmuStatus(epName != null ? "弹幕: " + epName + " 获取数据..." : "弹幕: 获取数据...");
+        logStatus(epName != null ? "弹幕: " + epName + " 获取数据..." : "弹幕: 获取数据...");
         new Thread(() -> {
             try {
                 URL u = new URL(danmuUrl + "/api/v2/comment/" + epId + "?format=json");
@@ -1143,7 +1098,7 @@ public class DanmuManager {
                                 if (ratio < 0.95f || ratio > 1.05f) {
                                     float diffPct = Math.abs((1f - ratio) * 100f);
                                     String direction = ratio < 1f ? "弹幕偏长" : "弹幕偏短";
-                                    showDanmuStatus(direction
+                                    logStatus(direction
                                             + " 弹幕=" + (int) maxDanmuTime + "s"
                                             + " 视频=" + (int) videoDur + "s"
                                             + " 差距=" + String.format("%.1f", diffPct) + "%");
@@ -1169,7 +1124,7 @@ public class DanmuManager {
                     }
                     String msg = (epName != null ? epName + " " : "") + "弹幕加载完成·共" + total + "条";
                     if (loaded < total) msg += "（显示前" + loaded + "条）";
-                    showDanmuStatus(msg);
+                    logStatus(msg);
                 });
             } catch (Exception e) {
                 showDanmuStatus("弹幕失败: " + e.getMessage());
@@ -1180,7 +1135,7 @@ public class DanmuManager {
     // ========== 自动匹配 ==========
 
     private void startAutoMatch(String title, int targetEp) {
-        showDanmuStatus("弹幕: 正在匹配 \"" + title + "\"...");
+        logStatus("弹幕: 正在匹配 \"" + title + "\"...");
         new Thread(() -> {
             try {
                 int episodeId = 0;
@@ -1225,7 +1180,7 @@ public class DanmuManager {
                             Log.d(TAG, "match ok: epId=" + episodeId + " matchedEp=" + matchedEpNum
                                     + " targetEp=" + targetEp + " name=" + matchedName);
                             if (targetEp > 0 && matchedEpNum > 0 && matchedEpNum != targetEp) {
-                                showDanmuStatus("弹幕: match 匹配到第" + matchedEpNum + "集，需要第" + targetEp + "集，丢弃");
+                                logStatus("弹幕: match 匹配到第" + matchedEpNum + "集，需要第" + targetEp + "集，丢弃");
                                 episodeId = -1;
                             }
                         }
@@ -1264,7 +1219,7 @@ public class DanmuManager {
                                     java.util.regex.Matcher mEp = Pattern.compile("[第](\\d+)[集]").matcher(matchEp);
                                     if (mEp.find()) matchedEpNum = Integer.parseInt(mEp.group(1));
                                     if (targetEp > 0 && matchedEpNum > 0 && matchedEpNum != targetEp) {
-                                        showDanmuStatus("弹幕: 重试 match 匹配到第" + matchedEpNum + "集，需要第" + targetEp + "集，丢弃");
+                                        logStatus("弹幕: 重试 match 匹配到第" + matchedEpNum + "集，需要第" + targetEp + "集，丢弃");
                                         episodeId = -1;
                                     }
                                 }
@@ -1277,7 +1232,7 @@ public class DanmuManager {
                     // 优先用 match 返回的番剧名/ID 搜索
                     String searchKw = matchAnimeTitle.isEmpty() ? title : matchAnimeTitle;
                     Log.d(TAG, "match failed, searching: " + searchKw + " (animeId=" + matchAnimeId + ")");
-                    showDanmuStatus("弹幕: 搜索 \"" + searchKw + "\"...");
+                    logStatus("弹幕: 搜索 \"" + searchKw + "\"...");
                     try {
                         // 如果有 animeId 直接取剧集列表
                         if (matchAnimeId > 0) {
@@ -1299,7 +1254,7 @@ public class DanmuManager {
                                 eps = bj.getJSONObject("data").getJSONArray("episodes");
                             if (eps != null && eps.length() > 0) {
                                 if (targetEp > 0) {
-                                    showDanmuStatus("弹幕: 从剧集列表中找第" + targetEp + "集...");
+                                    logStatus("弹幕: 从剧集列表中找第" + targetEp + "集...");
                                     for (int ei = 0; ei < eps.length(); ei++) {
                                         JSONObject epo = eps.getJSONObject(ei);
                                         if (epo.optInt("episodeNumber", 0) == targetEp) {
@@ -1368,7 +1323,7 @@ public class DanmuManager {
                                         eps = bj.getJSONObject("data").getJSONArray("episodes");
                                     if (eps != null && eps.length() > 0) {
                                         if (targetEp > 0) {
-                                            showDanmuStatus("弹幕: 从剧集列表中找第" + targetEp + "集...");
+                                            logStatus("弹幕: 从剧集列表中找第" + targetEp + "集...");
                                             for (int ei = 0; ei < eps.length(); ei++) {
                                                 JSONObject epo = eps.getJSONObject(ei);
                                                 if (epo.optInt("episodeNumber", 0) == targetEp) {
@@ -1399,7 +1354,7 @@ public class DanmuManager {
                             if (parts.length == 2) {
                                 final int cachedAid = Integer.parseInt(parts[0]);
                                 final String cachedName = parts[1];
-                                showDanmuStatus("弹幕: 使用缓存 \"" + cachedName + "\" 匹配第" + targetEp + "集...");
+                                logStatus("弹幕: 使用缓存 \"" + cachedName + "\" 匹配第" + targetEp + "集...");
                                 Log.d(TAG, "缓存命中: " + data.getItemTV() + " -> " + cachedName + " (aid=" + cachedAid + ")");
                                 URL bu = new URL(danmuUrl + "/api/v2/bangumi/" + cachedAid);
                                 HttpURLConnection bc = (HttpURLConnection) bu.openConnection();

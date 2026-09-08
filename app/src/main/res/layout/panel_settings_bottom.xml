@@ -296,9 +296,23 @@
                     android:layout_height="wrap_content"
                     android:focusable="true"
                     android:nextFocusUp="@+id/switchLock"
-                    android:nextFocusDown="@+id/btnCloseSettings" />
+                    android:nextFocusDown="@+id/btnSkipEntry" />
 
             </LinearLayout>
+
+            <!-- 跳过设置入口（原右上角按钮，整合进设置面板） -->
+            <Button
+                android:id="@+id/btnSkipEntry"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_chip"
+                android:text="跳过设置"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:nextFocusUp="@+id/switchAutoNext"
+                android:nextFocusDown="@+id/btnCloseSettings" />
 
         </LinearLayout>
 

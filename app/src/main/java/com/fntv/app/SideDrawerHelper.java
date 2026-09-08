@@ -92,6 +92,8 @@ public class SideDrawerHelper {
         dismiss();
         dialog = new Dialog(activity, R.style.SideDrawerDialog);
         dialog.setContentView(R.layout.panel_side_drawer);
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(true);
         Window w = dialog.getWindow();
         if (w != null) {
             w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -108,6 +110,8 @@ public class SideDrawerHelper {
         sideActions = dialog.findViewById(R.id.sideActions);
         sideList = dialog.findViewById(R.id.sideList);
         LinearLayout sideCustom = dialog.findViewById(R.id.sideCustom);
+        View sideCustomScroll = dialog.findViewById(R.id.sideCustomScroll);
+        View sideListScroll = dialog.findViewById(R.id.sideListScroll);
 
         sideTitle.setText(title);
 
@@ -142,8 +146,15 @@ public class SideDrawerHelper {
         if (customContent != null) {
             sideCustom.setVisibility(View.VISIBLE);
             sideCustom.addView(customContent);
+            if (sideCustomScroll != null) sideCustomScroll.setVisibility(View.VISIBLE);
         } else {
             sideCustom.setVisibility(View.GONE);
+            if (sideCustomScroll != null) sideCustomScroll.setVisibility(View.GONE);
+        }
+        // 纯自定义内容抽屉（items 为 null）隐藏列表滚动区，让内容独占抽屉；
+        // items 非空列表（含空列表的"暂无可选项"空态）保持可见
+        if (sideListScroll != null) {
+            sideListScroll.setVisibility(items == null && customContent != null ? View.GONE : View.VISIBLE);
         }
 
         renderRows();
@@ -268,6 +279,11 @@ public class SideDrawerHelper {
 
     public boolean isShowing() {
         return dialog != null && dialog.isShowing();
+    }
+
+    /** 获取当前 Dialog（供调用方设置 OnDismissListener 等），未显示时返回 null */
+    public Dialog getDialog() {
+        return dialog;
     }
 
     public void dismiss() {

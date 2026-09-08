@@ -25,6 +25,9 @@
         android:max="100"
         android:progress="50"
         android:focusable="true"
+        android:defaultFocusHighlightEnabled="false"
+        android:background="@null"
+        android:splitTrack="false"
         android:progressDrawable="@drawable/seeker_progress"
         android:thumb="@drawable/seeker_thumb" />
 

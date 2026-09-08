@@ -21,21 +21,19 @@ public class SettingsPanelManager {
 
     // ---- 主设置面板（Tab） ----
     private final ViewGroup settingsPanel;
+    private final View settingsBackdrop;
     private final LinearLayout tabContentPlay, tabContentQuality, tabContentSubtitle, tabContentDanmu;
     private final Button tabBtnPlay, tabBtnQuality, tabBtnSubtitle, tabBtnDanmu;
     private final Button btnCloseSettings;
 
-    // ---- 弹幕设置面板 ----
-    private final LinearLayout danmuSettingsPanel;
-
-    // ---- 字幕设置面板 ----
-    private final LinearLayout subtitleSettingsPanel;
+    // ---- 弹幕设置抽屉（SideDrawerHelper，按需创建） ----
+    private SideDrawerHelper danmuDrawer;
+    private View danmuContent;
 
     // ---- 状态 ----
     private int currentTab = 0; // 0=播放, 1=画质, 2=字幕, 3=弹幕
     private boolean isSettingsOpen = false;
     private boolean isDanmuOpen = false;
-    private boolean isSubtitleOpen = false;
 
     // ---- 回调 ----
     private final OnPanelStateChangeListener stateListener;
@@ -44,7 +42,6 @@ public class SettingsPanelManager {
     public interface OnPanelStateChangeListener {
         void onSettingsPanelChanged(boolean open, int currentTab);
         void onDanmuPanelChanged(boolean open);
-        void onSubtitlePanelChanged(boolean open);
     }
 
     /**
@@ -56,6 +53,7 @@ public class SettingsPanelManager {
      */
     public SettingsPanelManager(Context context, Views views, OnPanelStateChangeListener stateListener) {
         this.settingsPanel = views.settingsPanel;
+        this.settingsBackdrop = views.settingsBackdrop;
         this.tabContentPlay = views.tabContentPlay;
         this.tabContentQuality = views.tabContentQuality;
         this.tabContentSubtitle = views.tabContentSubtitle;
@@ -65,12 +63,11 @@ public class SettingsPanelManager {
         this.tabBtnSubtitle = views.tabBtnSubtitle;
         this.tabBtnDanmu = views.tabBtnDanmu;
         this.btnCloseSettings = views.btnCloseSettings;
-        this.danmuSettingsPanel = views.danmuSettingsPanel;
-        this.subtitleSettingsPanel = views.subtitleSettingsPanel;
         this.stateListener = stateListener;
 
         initTabs(context);
         initCloseButton();
+        settingsBackdrop.setOnClickListener(v -> closeSettingsPanel());
     }
 
     /**
@@ -168,6 +165,8 @@ public class SettingsPanelManager {
             return;
         }
         isSettingsOpen = true;
+        settingsPanel.clearAnimation();
+        settingsBackdrop.setVisibility(View.VISIBLE);
         settingsPanel.setVisibility(View.VISIBLE);
         switchTab(defaultTab);
         animateSlideIn(settingsPanel);
@@ -188,16 +187,37 @@ public class SettingsPanelManager {
     }
 
     /**
-     * 打开弹幕设置面板
+     * 打开弹幕设置抽屉（SideDrawerHelper 右侧抽屉样式）。
+     * 内容视图的控件接线由 PlayerActivity 的 onDanmuPanelChanged(true) 回调完成
+     * （DanmuManager.bindSettingsPanel 绑定到抽屉内容视图）。
      */
     public void openDanmuPanel() {
         if (isDanmuOpen) return;
         isDanmuOpen = true;
-        danmuSettingsPanel.setVisibility(View.VISIBLE);
-        animateSlideIn(danmuSettingsPanel);
+        if (danmuDrawer != null) {
+            danmuDrawer.dismiss();
+            danmuDrawer = null;
+        }
+        danmuDrawer = new SideDrawerHelper((android.app.Activity) settingsPanel.getContext());
+        android.view.View content = android.view.LayoutInflater.from(settingsPanel.getContext())
+                .inflate(R.layout.panel_danmu_content, null);
+        danmuContent = content;
+        danmuDrawer.showCustom("弹幕设置", content);
+        danmuDrawer.getDialog().setOnDismissListener(d -> {
+            isDanmuOpen = false;
+            danmuContent = null;
+            if (stateListener != null) {
+                stateListener.onDanmuPanelChanged(false);
+            }
+        });
         if (stateListener != null) {
             stateListener.onDanmuPanelChanged(true);
         }
+    }
+
+    /** 获取当前弹幕抽屉的内容视图（打开期间有效，供绑定控件），未打开时返回 null */
+    public View getDanmuPanelContent() {
+        return danmuContent;
     }
 
     /**
@@ -205,8 +225,12 @@ public class SettingsPanelManager {
      */
     public void closeDanmuPanel() {
         if (!isDanmuOpen) return;
+        if (danmuDrawer != null) {
+            danmuDrawer.dismiss();
+            danmuDrawer = null;
+        }
         isDanmuOpen = false;
-        animateSlideOut(danmuSettingsPanel);
+        danmuContent = null;
         if (stateListener != null) {
             stateListener.onDanmuPanelChanged(false);
         }
@@ -224,42 +248,6 @@ public class SettingsPanelManager {
     }
 
     /**
-     * 打开字幕设置面板
-     */
-    public void openSubtitlePanel() {
-        if (isSubtitleOpen) return;
-        isSubtitleOpen = true;
-        subtitleSettingsPanel.setVisibility(View.VISIBLE);
-        animateSlideIn(subtitleSettingsPanel);
-        if (stateListener != null) {
-            stateListener.onSubtitlePanelChanged(true);
-        }
-    }
-
-    /**
-     * 关闭字幕设置面板
-     */
-    public void closeSubtitlePanel() {
-        if (!isSubtitleOpen) return;
-        isSubtitleOpen = false;
-        animateSlideOut(subtitleSettingsPanel);
-        if (stateListener != null) {
-            stateListener.onSubtitlePanelChanged(false);
-        }
-    }
-
-    /**
-     * 切换字幕设置面板显隐状态
-     */
-    public void toggleSubtitlePanel() {
-        if (isSubtitleOpen) {
-            closeSubtitlePanel();
-        } else {
-            openSubtitlePanel();
-        }
-    }
-
-    /**
      * 获取当前是否打开了设置面板
      */
     public boolean isSettingsPanelOpen() {
@@ -271,13 +259,6 @@ public class SettingsPanelManager {
      */
     public boolean isDanmuPanelOpen() {
         return isDanmuOpen;
-    }
-
-    /**
-     * 获取当前是否打开了字幕设置面板
-     */
-    public boolean isSubtitlePanelOpen() {
-        return isSubtitleOpen;
     }
 
     /**
@@ -315,7 +296,10 @@ public class SettingsPanelManager {
         slideOut.setAnimationListener(new Animation.AnimationListener() {
             @Override public void onAnimationStart(Animation animation) {}
             @Override public void onAnimationEnd(Animation animation) {
-                panel.setVisibility(View.GONE);
+                if (!isSettingsOpen) {
+                    panel.setVisibility(View.GONE);
+                    settingsBackdrop.setVisibility(View.GONE);
+                }
             }
             @Override public void onAnimationRepeat(Animation animation) {}
         });
@@ -327,6 +311,7 @@ public class SettingsPanelManager {
     /** 所有视图的容器，便于构造时批量传入 */
     public static class Views {
         public final ViewGroup settingsPanel;
+        public final View settingsBackdrop;
         public final LinearLayout tabContentPlay;
         public final LinearLayout tabContentQuality;
         public final LinearLayout tabContentSubtitle;
@@ -336,16 +321,14 @@ public class SettingsPanelManager {
         public final Button tabBtnSubtitle;
         public final Button tabBtnDanmu;
         public final Button btnCloseSettings;
-        public final LinearLayout danmuSettingsPanel;
-        public final LinearLayout subtitleSettingsPanel;
 
-        public Views(ViewGroup settingsPanel,
+        public Views(ViewGroup settingsPanel, View settingsBackdrop,
                      LinearLayout tabContentPlay, LinearLayout tabContentQuality,
                      LinearLayout tabContentSubtitle, LinearLayout tabContentDanmu,
                      Button tabBtnPlay, Button tabBtnQuality, Button tabBtnSubtitle, Button tabBtnDanmu,
-                     Button btnCloseSettings,
-                     LinearLayout danmuSettingsPanel, LinearLayout subtitleSettingsPanel) {
+                     Button btnCloseSettings) {
             this.settingsPanel = settingsPanel;
+            this.settingsBackdrop = settingsBackdrop;
             this.tabContentPlay = tabContentPlay;
             this.tabContentQuality = tabContentQuality;
             this.tabContentSubtitle = tabContentSubtitle;
@@ -355,8 +338,6 @@ public class SettingsPanelManager {
             this.tabBtnSubtitle = tabBtnSubtitle;
             this.tabBtnDanmu = tabBtnDanmu;
             this.btnCloseSettings = btnCloseSettings;
-            this.danmuSettingsPanel = danmuSettingsPanel;
-            this.subtitleSettingsPanel = subtitleSettingsPanel;
         }
     }
 }

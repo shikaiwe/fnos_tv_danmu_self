@@ -1,22 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 字幕样式对话框（字号缩放 / 垂直偏移 / 延迟对齐）— Kazumi 风格 -->
+<!-- 字幕调整内容（经 SideDrawerHelper.showCustom 嵌入右侧抽屉，无自带标题/卡片背景）：
+     字号缩放 / 垂直偏移 / 延迟对齐 / 显示开关 / 外挂字幕 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/bg_card_elevated"
-    android:orientation="vertical"
-    android:padding="20dp">
-
-    <!-- 标题 -->
-    <TextView
-        android:id="@+id/tv_sub_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="字幕设置"
-        android:textColor="@color/colorAccent"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:paddingBottom="16dp" />
+    android:orientation="vertical">
 
     <!-- 字号缩放 -->
     <include layout="@layout/item_danmu_slider"

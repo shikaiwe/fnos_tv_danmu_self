@@ -546,8 +546,8 @@ public class CloudStreamManager {
                         }
                         final boolean success = ok;
                         if (auto) {
-                            if (success) cb.runOnUiThread(() -> Toast.makeText(cb.getContext(),
-                                    "已自动加载字幕: " + displayName, Toast.LENGTH_SHORT).show());
+                            // 自动加载完全静默：成功不提示，失败仅打日志（用户要求仅出错时才提示，且此处失败多为无字幕可用的正常回退）
+                            Log.d(TAG, "自动加载字幕" + (success ? "成功: " : "失败: ") + displayName);
                         } else {
                             cb.runOnUiThread(() -> Toast.makeText(cb.getContext(),
                                     success ? "已加载字幕: " + displayName : "字幕下载失败",

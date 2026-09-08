@@ -35,18 +35,23 @@ import dev.jdtech.mpv.MPVLib;
 public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
 
     private CustomMPVView playerView;
-    private TextView tvBuffering, tvTime, infoText;
+    private TextView tvBuffering, tvTime;
+    /** 信息抽屉键值网格分组容器（updateInfo 填充，抽屉关闭时置空） */
+    private LinearLayout infoText, infoTextAudio, infoTextExtra;
     private SeekBar seekBar;
     private Button btnPlayPause, btnRewind, btnForward, btnSpeed, btnRatio, btnInfo, btnEpisodeList, btnBack, btnDanmu, btnQuality;
     private ImageView btnLock;
-    private TextView tvTitle, tvDanmuStatus, tvDanmuMatch, tvSpeedHint, infoTextAudio, infoTextExtra;
-    private Button btnCloudMode, btnBrightness, btnSkip, btnSettings;
+    private TextView tvTitle, tvDanmuStatus, tvDanmuMatch, tvSpeedHint;
+    private Button btnCloudMode, btnBrightness, btnSettings;
     private boolean introSkipped = false, outroSkipped = false;
     private float speedBeforeLongPress = 1.0f;
     private DanmuView danmuView;
     private View controller, topBar;
+    private final Runnable finishHideControls = this::finishHideControls;
     /** 信息抽屉（⋯ 菜单） */
     private android.app.Dialog infoDrawer;
+    private SideDrawerHelper skipDrawer;
+    private SideDrawerHelper subtitleDrawer;
     private boolean isLocked = false;
     private DanmuManager danmuManager;
     private QualitySelectHelper qualityHelper;
@@ -144,6 +149,9 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         }
         setContentView(R.layout.activity_player);
 
+        // 视频始终基于完整屏幕居中显示；刘海/导航栏安全区只约束控制 UI，
+        // 不作为 mpv 视频边距，否则横屏左侧刘海会把画面整体推向右侧。
+
         apiManager = FnApiManager.getInstance();
         SharedPreferences prefs = getSharedPreferences("fntv_prefs", MODE_PRIVATE);
         baseUrl = prefs.getString("host", "").replaceAll("/+$", "");
@@ -208,18 +216,18 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         // Anime4K 超分管理器（着色器懒复制到 filesDir/shaders/）
         anime4kManager = new Anime4KManager(this);
 
-        // 底部设置面板管理器（面板视图已在 activity_player.xml 中 include）
+        // 底部设置面板管理器（面板视图已在 activity_player.xml 中 include；
+        // 弹幕/字幕设置已迁移为 SideDrawerHelper 右侧抽屉，不再使用 in-layout 面板）
         settingsPanelManager = new SettingsPanelManager(this, new SettingsPanelManager.Views(
                 findViewById(R.id.settingsPanel),
+                findViewById(R.id.settingsBackdrop),
                 findViewById(R.id.tabContentPlay),
                 findViewById(R.id.tabContentQuality),
                 findViewById(R.id.tabContentSubtitle),
                 findViewById(R.id.tabContentDanmu),
                 findViewById(R.id.tabPlay), findViewById(R.id.tabQuality),
                 findViewById(R.id.tabSubtitle), findViewById(R.id.tabDanmu),
-                findViewById(R.id.btnCloseSettings),
-                findViewById(R.id.danmuSettingsPanel),
-                findViewById(R.id.subtitleSettingsPanel)),
+                findViewById(R.id.btnCloseSettings)),
                 new SettingsPanelManager.OnPanelStateChangeListener() {
                     @Override public void onSettingsPanelChanged(boolean open, int currentTab) {
                         if (open) {
@@ -231,15 +239,11 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
                     }
                     @Override public void onDanmuPanelChanged(boolean open) {
                         if (open) {
-                            danmuManager.bindSettingsPanel(findViewById(R.id.danmuSettingsPanel),
-                                    () -> settingsPanelManager.closeDanmuPanel());
-                        } else if (playerView != null) {
-                            playerView.requestFocus();
-                        }
-                    }
-                    @Override public void onSubtitlePanelChanged(boolean open) {
-                        if (open) {
-                            syncSubtitlePanelState();
+                            View content = settingsPanelManager.getDanmuPanelContent();
+                            if (content != null) {
+                                danmuManager.bindSettingsPanel(content,
+                                        () -> settingsPanelManager.closeDanmuPanel());
+                            }
                         } else if (playerView != null) {
                             playerView.requestFocus();
                         }
@@ -367,11 +371,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
             btnBrightness.setOnClickListener(v -> showBrightnessDialog());
             setButtonIcon(btnBrightness, R.drawable.ic_brightness);
         }
-        btnSkip = findViewById(R.id.btnSkip);
-        if (btnSkip != null) {
-            btnSkip.setOnClickListener(v -> showIntroOutroDialog());
-            setButtonIcon(btnSkip, R.drawable.ic_skip);
-        }
+        // 跳过设置入口已整合进设置面板（播放 Tab btnSkipEntry）
         // 应用保存的亮度和 HDR 设置
         int savedBright = getSharedPreferences("fntv_prefs", MODE_PRIVATE).getInt("video_brightness", 100);
         if (savedBright != 100) applyBrightness(savedBright);
@@ -911,6 +911,8 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
     private void startPlayback() {
         if (mediaGuid == null || playerView == null) return;
         autoSubTried = false; // 每次起播允许自动选一次字幕
+        // 视频按完整屏幕居中；刘海/导航栏安全区仅约束控制 UI，不偏移视频画面
+        playerView.setVideoMarginRatio(0, 0, 0, 0);
         // 恢复上次倍速偏好
         restoreSavedSpeed();
         CloudStreamManager.PlaybackConfig cfg = cloudStreamManager.getPlaybackConfig(baseUrl, mediaGuid);
@@ -1114,6 +1116,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         if (playerView != null) playerView.setAspectRatioMode(RATIO_MODES[ratioIdx]);
     }
 
+
     private void checkHdr() {
         handler.postDelayed(() -> {
             if (playerView == null || !playerView.isMpvReady()) return;
@@ -1175,18 +1178,16 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         int defIntro = p.getInt(key + "_intro", 0);
         int defOutro = p.getInt(key + "_outro", 0);
 
-        final android.app.Dialog dialog = showRightDrawerDialog(R.layout.dialog_skip);
-
-        // 标题
-        TextView tvTitle = dialog.findViewById(R.id.tv_skip_title);
-        if (tvTitle != null) tvTitle.setText((itemTV != null ? itemTV : "当前视频") + " - 跳过设置");
+        // 防御：先关闭旧抽屉，再以右侧抽屉样式展示（标题由抽屉提供）
+        if (skipDrawer != null && skipDrawer.isShowing()) skipDrawer.dismiss();
+        View content = getLayoutInflater().inflate(R.layout.dialog_skip, null);
 
         // 片头滑条
-        final TextView introLabel = dialog.findViewById(R.id.dm_label);
-        final SeekBar introSb = dialog.findViewById(R.id.dm_seekbar);
+        final TextView introLabel = content.findViewById(R.id.dm_label);
+        final SeekBar introSb = content.findViewById(R.id.dm_seekbar);
         // 片尾滑条（第二个 include 的 ID 是 dm_outro，里面的子控件 ID 相同）
-        final TextView outroLabel = ((ViewGroup)dialog.findViewById(R.id.dm_outro)).findViewById(R.id.dm_label);
-        final SeekBar outroSb = ((ViewGroup)dialog.findViewById(R.id.dm_outro)).findViewById(R.id.dm_seekbar);
+        final TextView outroLabel = ((ViewGroup) content.findViewById(R.id.dm_outro)).findViewById(R.id.dm_label);
+        final SeekBar outroSb = ((ViewGroup) content.findViewById(R.id.dm_outro)).findViewById(R.id.dm_seekbar);
 
         if (introLabel != null) introLabel.setText("跳过片头: " + defIntro + "秒");
         if (outroLabel != null) outroLabel.setText("跳过片尾: " + defOutro + "秒");
@@ -1216,18 +1217,20 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
             });
         }
 
-        Button reset = dialog.findViewById(R.id.dm_reset);
-        Button cancel = dialog.findViewById(R.id.dm_cancel);
-        Button ok = dialog.findViewById(R.id.dm_ok);
+        Button reset = content.findViewById(R.id.dm_reset);
+        Button cancel = content.findViewById(R.id.dm_cancel);
+        Button ok = content.findViewById(R.id.dm_ok);
 
         if (reset != null) reset.setOnClickListener(v -> { if (introSb != null) introSb.setProgress(0); if (outroSb != null) outroSb.setProgress(0); });
-        if (cancel != null) cancel.setOnClickListener(v -> dialog.dismiss());
+        if (cancel != null) cancel.setOnClickListener(v -> skipDrawer.dismiss());
         if (ok != null) ok.setOnClickListener(v -> {
             if (introSb != null) p.edit().putInt(key + "_intro", introSb.getProgress()).apply();
             if (outroSb != null) p.edit().putInt(key + "_outro", outroSb.getProgress()).apply();
-            dialog.dismiss();
+            skipDrawer.dismiss();
         });
-        dialog.show();
+
+        skipDrawer = new SideDrawerHelper(this);
+        skipDrawer.showCustom((itemTV != null ? itemTV : "当前视频") + " · 跳过设置", content);
     }
 
     private void showBrightnessDialog() {
@@ -1371,23 +1374,33 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
     /**
      * 字幕设置对话框：字号缩放 / 垂直偏移 / 延迟对齐 / 显示开关 / 外挂字幕
      * 滑动即实时预览，确定时写入 SharedPreferences，取消则回滚到已保存值
+     * 经 SideDrawerHelper 以右侧抽屉样式展示
      */
     private void showSubtitleStyleDialog() {
         if (playerView == null || !playerView.isMpvReady()) {
             Toast.makeText(this, "播放器未就绪", Toast.LENGTH_SHORT).show();
             return;
         }
+        // 从信息抽屉内打开时先关闭它，避免双层抽屉叠加
+        if (infoDrawer != null && infoDrawer.isShowing()) {
+            infoDrawer.setOnDismissListener(null);
+            infoDrawer.dismiss();
+            infoDrawer = null;
+        }
+        if (subtitleDrawer != null && subtitleDrawer.isShowing()) {
+            subtitleDrawer.dismiss();
+        }
         final SharedPreferences p = getSharedPreferences("fntv_prefs", MODE_PRIVATE);
-        final android.app.Dialog dialog = showRightDrawerDialog(R.layout.dialog_subtitle_style);
+        View content = getLayoutInflater().inflate(R.layout.dialog_subtitle_style, null);
 
-        final TextView scaleLabel = ((ViewGroup) dialog.findViewById(R.id.dm_scale)).findViewById(R.id.dm_label);
-        final SeekBar scaleSb = ((ViewGroup) dialog.findViewById(R.id.dm_scale)).findViewById(R.id.dm_seekbar);
-        final TextView offsetLabel = ((ViewGroup) dialog.findViewById(R.id.dm_offset)).findViewById(R.id.dm_label);
-        final SeekBar offsetSb = ((ViewGroup) dialog.findViewById(R.id.dm_offset)).findViewById(R.id.dm_seekbar);
-        final TextView delayLabel = ((ViewGroup) dialog.findViewById(R.id.dm_delay)).findViewById(R.id.dm_label);
-        final SeekBar delaySb = ((ViewGroup) dialog.findViewById(R.id.dm_delay)).findViewById(R.id.dm_seekbar);
-        final CheckBox cbVisible = dialog.findViewById(R.id.dm_visible);
-        final Button btnLoadExt = dialog.findViewById(R.id.dm_load_ext);
+        final TextView scaleLabel = ((ViewGroup) content.findViewById(R.id.dm_scale)).findViewById(R.id.dm_label);
+        final SeekBar scaleSb = ((ViewGroup) content.findViewById(R.id.dm_scale)).findViewById(R.id.dm_seekbar);
+        final TextView offsetLabel = ((ViewGroup) content.findViewById(R.id.dm_offset)).findViewById(R.id.dm_label);
+        final SeekBar offsetSb = ((ViewGroup) content.findViewById(R.id.dm_offset)).findViewById(R.id.dm_seekbar);
+        final TextView delayLabel = ((ViewGroup) content.findViewById(R.id.dm_delay)).findViewById(R.id.dm_label);
+        final SeekBar delaySb = ((ViewGroup) content.findViewById(R.id.dm_delay)).findViewById(R.id.dm_seekbar);
+        final CheckBox cbVisible = content.findViewById(R.id.dm_visible);
+        final Button btnLoadExt = content.findViewById(R.id.dm_load_ext);
 
         // 字号：SeekBar 50~200 直接对应百分比
         scaleSb.setMax(200);
@@ -1436,12 +1449,12 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         cbVisible.setOnCheckedChangeListener((v, checked) -> subtitleManager.setVisible(checked));
 
         if (btnLoadExt != null) {
-            btnLoadExt.setOnClickListener(v -> { dialog.dismiss(); pickExternalSubtitle(); });
+            btnLoadExt.setOnClickListener(v -> { subtitleDrawer.dismiss(); pickExternalSubtitle(); });
         }
 
-        Button reset = dialog.findViewById(R.id.dm_reset);
-        Button cancel = dialog.findViewById(R.id.dm_cancel);
-        Button ok = dialog.findViewById(R.id.dm_ok);
+        Button reset = content.findViewById(R.id.dm_reset);
+        Button cancel = content.findViewById(R.id.dm_cancel);
+        Button ok = content.findViewById(R.id.dm_ok);
         if (reset != null) reset.setOnClickListener(v -> {
             scaleSb.setProgress(100);
             offsetSb.setProgress(50);
@@ -1453,7 +1466,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         });
         if (cancel != null) cancel.setOnClickListener(v -> {
             applySubtitlePrefs(); // 回滚为已保存的值
-            dialog.dismiss();
+            subtitleDrawer.dismiss();
         });
         if (ok != null) ok.setOnClickListener(v -> {
             p.edit()
@@ -1462,9 +1475,11 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
                     .putInt("sub_delay", (delaySb.getProgress() - 100) * 100)
                     .putBoolean("sub_visible", cbVisible.isChecked())
                     .apply();
-            dialog.dismiss();
+            subtitleDrawer.dismiss();
         });
-        dialog.show();
+
+        subtitleDrawer = new SideDrawerHelper(this);
+        subtitleDrawer.showCustom("字幕调整", content);
     }
 
     /**
@@ -1757,7 +1772,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         getWindow().setAttributes(lp);
     }
 
-    /** 打开信息抽屉（⋯ 菜单）：媒体信息（复用 updateInfo 三列文本）+ 字幕设置/HDR 入口 */
+    /** 打开信息抽屉（⋯ 菜单）：媒体信息双列键值网格 + 字幕设置/HDR 入口 */
     private void toggleInfo() {
         if (infoDrawer != null && infoDrawer.isShowing()) {
             infoDrawer.dismiss();
@@ -1772,19 +1787,10 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
 
-        // 三段媒体信息文本（updateInfo 负责填充，轨道切换回调也会刷新）
-        infoText = new TextView(this);
-        styleInfoText(infoText, density);
-        content.addView(infoText);
-        infoTextAudio = new TextView(this);
-        styleInfoText(infoTextAudio, density);
-        infoTextAudio.setTextColor(getColor(R.color.text_secondary));
-        content.addView(infoTextAudio);
-        infoTextExtra = new TextView(this);
-        styleInfoText(infoTextExtra, density);
-        infoTextExtra.setTextColor(getColor(R.color.text_hint));
-        infoTextExtra.setTextSize(11);
-        content.addView(infoTextExtra);
+        // 三个分组网格（视频/音频/其他），updateInfo 负责填充行，轨道切换回调也会刷新
+        infoText = addInfoGroup(content, "视频", density);
+        infoTextAudio = addInfoGroup(content, "音频", density);
+        infoTextExtra = addInfoGroup(content, "其他", density);
         updateInfo();
 
         // 操作行：字幕设置 / HDR 开关
@@ -1835,17 +1841,68 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         });
     }
 
+    /** 信息抽屉内新增一个键值分组（标题行 + 空网格容器），返回容器供 updateInfo 填充 */
+    private LinearLayout addInfoGroup(LinearLayout content, String title, float density) {
+        TextView tv = new TextView(this);
+        tv.setText(title);
+        tv.setTextColor(getColor(R.color.colorAccent));
+        tv.setTextSize(13);
+        tv.setTypeface(null, android.graphics.Typeface.BOLD);
+        tv.setPadding(0, 0, 0, (int) (6 * density));
+        content.addView(tv);
+
+        LinearLayout grid = new LinearLayout(this);
+        grid.setOrientation(LinearLayout.VERTICAL);
+        grid.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        content.addView(grid);
+        return grid;
+    }
+
+    /** 向分组网格添加一行「标签 + 值」：标签左对齐灰色，值右对齐白色，铺满抽屉宽度 */
+    private void addInfoRow(LinearLayout grid, String label, String value, float density) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        row.setPadding(0, 0, 0, (int) (5 * density));
+
+        TextView tvLabel = new TextView(this);
+        tvLabel.setText(label);
+        tvLabel.setTextColor(getColor(R.color.text_secondary));
+        tvLabel.setTextSize(12);
+        row.addView(tvLabel);
+
+        TextView tvValue = new TextView(this);
+        tvValue.setText(value);
+        tvValue.setTextColor(getColor(R.color.text_primary));
+        tvValue.setTextSize(13);
+        tvValue.setGravity(Gravity.END);
+        LinearLayout.LayoutParams valueLp = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        tvValue.setLayoutParams(valueLp);
+        row.addView(tvValue);
+
+        grid.addView(row);
+    }
+
+    /** 向分组网格添加一行整段说明文本（音轨列表/字幕轨等长文本），铺满宽度 */
+    private void addInfoLine(LinearLayout grid, String text, float density) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextColor(getColor(R.color.text_hint));
+        tv.setTextSize(11);
+        tv.setLineSpacing(2 * density, 1f);
+        tv.setPadding(0, 0, 0, (int) (5 * density));
+        grid.addView(tv);
+    }
+
     /** 信息抽屉内 HDR 标签刷新 */
     private void updateInfoHdrLabel(TextView btnHdr) {
         boolean enabled = getSharedPreferences("fntv_prefs", MODE_PRIVATE).getBoolean("hdr_enabled", false);
         btnHdr.setText(enabled ? "HDR:开" : "HDR:关");
         btnHdr.setTextColor(getColor(enabled ? R.color.channel_green : R.color.text_secondary));
-    }
-
-    private void styleInfoText(TextView tv, float density) {
-        tv.setTextColor(getColor(R.color.text_primary));
-        tv.setTextSize(12);
-        tv.setLineSpacing(3 * density, 1f);
     }
 
     // ========== 底部设置面板 ==========
@@ -1883,6 +1940,15 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
             swAutoNext.setChecked(p.getBoolean("auto_next", true));
             swAutoNext.setOnCheckedChangeListener((v, checked) ->
                     p.edit().putBoolean("auto_next", checked).apply());
+        }
+
+        // 跳过设置入口（原右上角 btnSkip 整合至此）
+        View btnSkipEntry = panel.findViewById(R.id.btnSkipEntry);
+        if (btnSkipEntry != null) {
+            btnSkipEntry.setOnClickListener(v -> {
+                settingsPanelManager.closeSettingsPanel();
+                showIntroOutroDialog();
+            });
         }
 
         // ---- 画质 tab ----
@@ -1929,7 +1995,11 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         }
         View btnSubEntry = panel.findViewById(R.id.btnSubtitleStyleEntry);
         if (btnSubEntry != null) {
-            btnSubEntry.setOnClickListener(v -> settingsPanelManager.openSubtitlePanel());
+            // 字幕调整已迁移为 SideDrawerHelper 右侧抽屉
+            btnSubEntry.setOnClickListener(v -> {
+                settingsPanelManager.closeSettingsPanel();
+                showSubtitleStyleDialog();
+            });
         }
 
         // ---- 弹幕 tab ----
@@ -1948,12 +2018,12 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
                 checked -> danmuView.setShowBottom(checked));
         View btnDanmuEntry = panel.findViewById(R.id.btnDanmuSettingsEntry);
         if (btnDanmuEntry != null) {
-            btnDanmuEntry.setOnClickListener(v -> settingsPanelManager.openDanmuPanel());
+            // 弹幕设置已迁移为 SideDrawerHelper 右侧抽屉
+            btnDanmuEntry.setOnClickListener(v -> {
+                settingsPanelManager.closeSettingsPanel();
+                settingsPanelManager.openDanmuPanel();
+            });
         }
-
-        // ---- 字幕面板 ----
-        View subPanel = findViewById(R.id.subtitleSettingsPanel);
-        if (subPanel != null) initSubtitlePanelControls(subPanel);
     }
 
     private interface OnDanmuTypeChanged { void onChanged(boolean checked); }
@@ -2054,6 +2124,12 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         isLocked = lock;
         btnLock.setImageResource(isLocked ? R.drawable.ic_lock_on : R.drawable.ic_lock_off);
         if (isLocked) {
+            // 立即隐藏并同步状态机（ctrlVis 复位），否则解锁时 showCtrl(true) 会因幂等分支提前返回
+            handler.removeCallbacks(hideC);
+            handler.removeCallbacks(finishHideControls);
+            ctrlVis = false;
+            controller.clearAnimation();
+            topBar.clearAnimation();
             topBar.setVisibility(View.INVISIBLE);
             controller.setVisibility(View.INVISIBLE);
             btnLock.setVisibility(View.INVISIBLE);
@@ -2150,122 +2226,6 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         if (tabBtn != null) tabBtn.requestFocus();
     }
 
-    // ========== 字幕设置面板 ==========
-
-    /** 接线字幕面板（实时应用 + 实时持久化，无需确认） */
-    private void initSubtitlePanelControls(View root) {
-        final SharedPreferences p = getSharedPreferences("fntv_prefs", MODE_PRIVATE);
-
-        final TextView scaleLabel = ((ViewGroup) root.findViewById(R.id.dm_scale)).findViewById(R.id.dm_label);
-        final SeekBar scaleSb = ((ViewGroup) root.findViewById(R.id.dm_scale)).findViewById(R.id.dm_seekbar);
-        final TextView offsetLabel = ((ViewGroup) root.findViewById(R.id.dm_offset)).findViewById(R.id.dm_label);
-        final SeekBar offsetSb = ((ViewGroup) root.findViewById(R.id.dm_offset)).findViewById(R.id.dm_seekbar);
-        final TextView delayLabel = ((ViewGroup) root.findViewById(R.id.dm_delay)).findViewById(R.id.dm_label);
-        final SeekBar delaySb = ((ViewGroup) root.findViewById(R.id.dm_delay)).findViewById(R.id.dm_seekbar);
-        final Switch cbVisible = root.findViewById(R.id.dm_visible);
-        final Button btnLoadExt = root.findViewById(R.id.dm_load_ext);
-
-        // 字号：50~200 对应百分比
-        scaleSb.setMax(200);
-        scaleSb.setProgress(Math.max(50, p.getInt("sub_scale", 100)));
-        scaleSb.setKeyProgressIncrement(5);
-        scaleLabel.setText("字幕字号: " + scaleSb.getProgress() + "%");
-        scaleSb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar s, int v, boolean fromUser) {
-                int pct = Math.max(50, v);
-                scaleLabel.setText("字幕字号: " + pct + "%");
-                if (fromUser) {
-                    subtitleManager.adjustStyle(pct / 100f, offsetSb.getProgress() - 50);
-                    p.edit().putInt("sub_scale", pct).apply();
-                }
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
-        });
-
-        // 垂直偏移：0~100 映射 -50~+50（正值上移）
-        offsetSb.setMax(100);
-        offsetSb.setProgress(p.getInt("sub_offset", 0) + 50);
-        offsetSb.setKeyProgressIncrement(2);
-        offsetLabel.setText("垂直位置: " + (offsetSb.getProgress() - 50));
-        offsetSb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar s, int v, boolean fromUser) {
-                offsetLabel.setText("垂直位置: " + (v - 50));
-                if (fromUser) {
-                    subtitleManager.adjustStyle(Math.max(50, scaleSb.getProgress()) / 100f, v - 50);
-                    p.edit().putInt("sub_offset", v - 50).apply();
-                }
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
-        });
-
-        // 延迟：0~200 映射 -10.0s~+10.0s（步进 0.1s）
-        delaySb.setMax(200);
-        delaySb.setProgress(p.getInt("sub_delay", 0) / 100 + 100);
-        delaySb.setKeyProgressIncrement(1);
-        delayLabel.setText(formatSubDelay(delaySb.getProgress()));
-        delaySb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar s, int v, boolean fromUser) {
-                delayLabel.setText(formatSubDelay(v));
-                if (fromUser) {
-                    subtitleManager.setDelay((v - 100) / 10.0);
-                    p.edit().putInt("sub_delay", (v - 100) * 100).apply();
-                }
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
-        });
-
-        cbVisible.setChecked(p.getBoolean("sub_visible", true));
-        cbVisible.setOnCheckedChangeListener((v, checked) -> {
-            subtitleManager.setVisible(checked);
-            p.edit().putBoolean("sub_visible", checked).apply();
-        });
-
-        if (btnLoadExt != null) {
-            btnLoadExt.setOnClickListener(v -> {
-                settingsPanelManager.closeSubtitlePanel();
-                pickExternalSubtitle();
-            });
-        }
-        Button reset = root.findViewById(R.id.btnSubReset);
-        if (reset != null) {
-            reset.setOnClickListener(v -> {
-                scaleSb.setProgress(100);
-                offsetSb.setProgress(50);
-                delaySb.setProgress(100);
-                cbVisible.setChecked(true);
-                subtitleManager.adjustStyle(1.0f, 0);
-                subtitleManager.setDelay(0);
-                subtitleManager.setVisible(true);
-                p.edit().putInt("sub_scale", 100).putInt("sub_offset", 0)
-                        .putInt("sub_delay", 0).putBoolean("sub_visible", true).apply();
-            });
-        }
-        Button confirm = root.findViewById(R.id.btnSubConfirm);
-        if (confirm != null) {
-            confirm.setOnClickListener(v -> settingsPanelManager.closeSubtitlePanel());
-        }
-    }
-
-    /** 字幕面板打开时同步滑条/开关为已保存值 */
-    private void syncSubtitlePanelState() {
-        View root = findViewById(R.id.subtitleSettingsPanel);
-        if (root == null) return;
-        final SharedPreferences p = getSharedPreferences("fntv_prefs", MODE_PRIVATE);
-        SeekBar scaleSb = ((ViewGroup) root.findViewById(R.id.dm_scale)).findViewById(R.id.dm_seekbar);
-        SeekBar offsetSb = ((ViewGroup) root.findViewById(R.id.dm_offset)).findViewById(R.id.dm_seekbar);
-        SeekBar delaySb = ((ViewGroup) root.findViewById(R.id.dm_delay)).findViewById(R.id.dm_seekbar);
-        Switch cbVisible = root.findViewById(R.id.dm_visible);
-        if (scaleSb != null) scaleSb.setProgress(Math.max(50, p.getInt("sub_scale", 100)));
-        if (offsetSb != null) offsetSb.setProgress(p.getInt("sub_offset", 0) + 50);
-        if (delaySb != null) delaySb.setProgress(p.getInt("sub_delay", 0) / 100 + 100);
-        if (cbVisible != null) cbVisible.setChecked(p.getBoolean("sub_visible", true));
-        // 焦点进面板（TV 遥控器）
-        View first = root.findViewById(R.id.btnSubReset);
-        if (first != null) first.requestFocus();
-    }
 
     private void updateTitle() {
         int epNum = getIntent().getIntExtra("episode_number", 0);
@@ -2285,40 +2245,61 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
     }
 
     private void showCtrl(boolean show) {
+        if (show) handler.removeCallbacks(finishHideControls);
         if (show && isLocked) {
+            btnLock.clearAnimation();
             btnLock.setVisibility(View.VISIBLE);
             if (lockOverlay != null) lockOverlay.setVisibility(View.GONE);
             return;
         }
-        ctrlVis = show;
+
         if (show) {
-            controller.startAnimation(AnimationUtils.loadAnimation(this, R.anim.controller_slide_in));
-            topBar.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in));
+            if (ctrlVis) {
+                resetHideTimer();
+                return;
+            }
+            ctrlVis = true;
+            controller.clearAnimation();
+            topBar.clearAnimation();
             controller.setVisibility(View.VISIBLE);
             topBar.setVisibility(View.VISIBLE);
             btnLock.setVisibility(View.VISIBLE);
             btnDanmu.setVisibility(View.VISIBLE);
+            controller.startAnimation(AnimationUtils.loadAnimation(this, R.anim.controller_slide_in));
+            topBar.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in));
             updateTitle();
             resetHideTimer();
             // 控制栏显示：通知弹幕层底部避让（避免弹幕被控制栏遮挡）
             if (danmuView != null) {
                 danmuView.post(() -> danmuView.setControllerBottomAvoid(controller.getHeight()));
             }
-        } else {
-            controller.startAnimation(AnimationUtils.loadAnimation(this, R.anim.controller_slide_out));
-            topBar.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out));
-            controller.postDelayed(() -> {
-                controller.setVisibility(View.INVISIBLE);
-                topBar.setVisibility(View.INVISIBLE);
-                btnLock.setVisibility(View.INVISIBLE);
-                btnDanmu.setVisibility(View.INVISIBLE);
-                // 锁定状态：重新显示四角遮罩
-                if (isLocked && lockOverlay != null) lockOverlay.setVisibility(View.VISIBLE);
-                // 控制栏隐藏：清除弹幕底部避让
-                if (danmuView != null) danmuView.setControllerBottomAvoid(0);
-            }, 300);
-            hideSystemUi();
+            return;
         }
+
+        handler.removeCallbacks(hideC);
+        if (!ctrlVis) {
+            hideSystemUi();
+            return;
+        }
+        ctrlVis = false;
+        controller.clearAnimation();
+        topBar.clearAnimation();
+        controller.startAnimation(AnimationUtils.loadAnimation(this, R.anim.controller_slide_out));
+        topBar.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out));
+        handler.postDelayed(finishHideControls, 300);
+        hideSystemUi();
+    }
+
+    private void finishHideControls() {
+        if (ctrlVis) return;
+        controller.clearAnimation();
+        topBar.clearAnimation();
+        controller.setVisibility(View.INVISIBLE);
+        topBar.setVisibility(View.INVISIBLE);
+        btnLock.setVisibility(View.INVISIBLE);
+        btnDanmu.setVisibility(View.INVISIBLE);
+        if (isLocked && lockOverlay != null) lockOverlay.setVisibility(View.VISIBLE);
+        if (danmuView != null) danmuView.setControllerBottomAvoid(0);
     }
     private void resetHideTimer() {
         handler.removeCallbacks(hideC);
@@ -2327,7 +2308,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
     private final Runnable hideC = () -> {
         // 焦点在控制器按钮上时推迟隐藏，infoPanel/顶栏/无焦点时正常隐藏
         if (controller.hasFocus() || btnDanmu.hasFocus() || btnLock.hasFocus()
-                || btnCloudMode.hasFocus() || btnBrightness.hasFocus() || btnSkip.hasFocus()
+                || btnCloudMode.hasFocus() || btnBrightness.hasFocus()
                 || btnInfo.hasFocus() || btnBack.hasFocus()
                 || (btnQuality != null && btnQuality.hasFocus())) {
             resetHideTimer();
@@ -2354,7 +2335,6 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         btnCloudMode.setOnFocusChangeListener(l);
         if (btnSettings != null) btnSettings.setOnFocusChangeListener(l);
         if (btnBrightness != null) btnBrightness.setOnFocusChangeListener(l);
-        if (btnSkip != null) btnSkip.setOnFocusChangeListener(l);
         View btnAudioTrack = findViewById(R.id.btnAudioTrack);
         View btnSubtitleTrack = findViewById(R.id.btnSubtitleTrack);
         if (btnAudioTrack != null) btnAudioTrack.setOnFocusChangeListener(l);
@@ -2362,10 +2342,6 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         // 底部设置面板焦点触发隐藏控制栏
         if (findViewById(R.id.settingsPanel) != null)
             findViewById(R.id.settingsPanel).setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) resetHideTimer(); });
-        if (findViewById(R.id.danmuSettingsPanel) != null)
-            findViewById(R.id.danmuSettingsPanel).setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) resetHideTimer(); });
-        if (findViewById(R.id.subtitleSettingsPanel) != null)
-            findViewById(R.id.subtitleSettingsPanel).setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) resetHideTimer(); });
     };
 
     /** 时间显示：当前时间白色 / 总时长灰色（参考图双色样式） */
@@ -2435,90 +2411,98 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
         }).start();
     }
 
-    /** 刷新信息面板（数据来源改为 mpv 属性 + 服务端流信息兜底） */
+    /** 刷新信息面板：键值行填充三个分组网格（数据来源 mpv 属性 + 服务端流信息兜底） */
     private void updateInfo() {
         if (playerView == null || !playerView.isMpvReady()) return;
         String mpvVCodec = playerView.getVideoCodec();
         String mpvACodec = playerView.getAudioCodec();
+        float density = getResources().getDisplayMetrics().density;
 
-        // 视频（左列）
-        StringBuilder v = new StringBuilder();
-        v.append("── 视频 ──\n");
-        String codec = FormatUtils.fmtVideoCodec(streamVCodec.isEmpty() ? mpvVCodec : streamVCodec);
-        v.append("编码 ").append(codec).append("\n");
-        // 优先用 mpv 实际解码的画面参数（切换画质后自动更新）
-        int w = playerView.getVideoWidth() > 0 ? playerView.getVideoWidth() : streamVWidth;
-        int h = playerView.getVideoHeight() > 0 ? playerView.getVideoHeight() : streamVHeight;
-        if (w > 0 && h > 0) v.append("分辨率 ").append(w).append("×").append(h).append("\n");
-        float fps = 0;
-        if (!streamVFps.isEmpty()) { try { fps = Float.parseFloat(streamVFps.replaceAll("[^0-9.]", "")); } catch (Exception ignored) {} }
-        if (fps <= 0) fps = playerView.getVideoFps();
-        if (fps > 0) v.append("帧率 ").append(String.format("%.3f fps", fps)).append("\n");
-        int vBitrate = playerView.getPropertyIntSafe("video-bitrate", 0);
-        if (vBitrate > 0) v.append("码率 ").append(FormatUtils.formatBitrate(vBitrate)).append("\n");
-        else if (streamBitrate > 0) v.append("码率 ").append(FormatUtils.formatBitrate(streamBitrate)).append("\n");
-        if (streamVBitDepth > 0) v.append("色深 ").append(streamVBitDepth).append("bit\n");
-        if (streamVHdr || playerView.isHdrVideo()) v.append("HDR10\n");
-        v.append("解码 ").append(actualVideoDecoder.isEmpty() ? (isHwDecode ? "硬解" : "软解") : actualVideoDecoder);
-        if (infoText != null) infoText.setText(v.toString());
-
-        // 音频（右列）
-        StringBuilder a = new StringBuilder();
-        a.append("── 音频 ──\n");
-        if (mpvACodec != null && !mpvACodec.isEmpty()) {
-            a.append("编码 ").append(FormatUtils.fmtAudioCodec(mpvACodec)).append("\n");
-            int ch = playerView.getPropertyIntSafe("audio-params/channel-count", 0);
-            a.append("声道 ").append(ch > 0 ? (ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch") : "?").append("\n");
-            int sr = playerView.getPropertyIntSafe("audio-params/samplerate", 0);
-            a.append("采样 ").append(sr > 0 ? sr + "Hz" : "?").append("\n");
-            int aBitrate = playerView.getPropertyIntSafe("audio-bitrate", 0);
-            if (aBitrate > 0) a.append("码率 ").append(aBitrate / 1000).append("kbps\n");
-            a.append("解码 ").append(actualAudioDecoder.isEmpty() ? (isHwDecode ? "硬解" : "软解") : actualAudioDecoder);
-            // 显示用户选择的音轨（如有）
-            String selAudio = cloudStreamManager != null ? cloudStreamManager.getLastAudioTrackLabel() : "";
-            if (!selAudio.isEmpty() && !selAudio.equals("默认")) {
-                a.append("\n已选 ").append(selAudio);
-            }
-        } else {
-            a.append("无音轨\n");
+        // ---- 视频分组 ----
+        if (infoText != null) {
+            infoText.removeAllViews();
+            String codec = FormatUtils.fmtVideoCodec(streamVCodec.isEmpty() ? mpvVCodec : streamVCodec);
+            addInfoRow(infoText, "编码", codec, density);
+            // 优先用 mpv 实际解码的画面参数（切换画质后自动更新）
+            int w = playerView.getVideoWidth() > 0 ? playerView.getVideoWidth() : streamVWidth;
+            int h = playerView.getVideoHeight() > 0 ? playerView.getVideoHeight() : streamVHeight;
+            if (w > 0 && h > 0) addInfoRow(infoText, "分辨率", w + "×" + h, density);
+            float fps = 0;
+            if (!streamVFps.isEmpty()) { try { fps = Float.parseFloat(streamVFps.replaceAll("[^0-9.]", "")); } catch (Exception ignored) {} }
+            if (fps <= 0) fps = playerView.getVideoFps();
+            if (fps > 0) addInfoRow(infoText, "帧率", String.format("%.3f fps", fps), density);
+            int vBitrate = playerView.getPropertyIntSafe("video-bitrate", 0);
+            String vBr = vBitrate > 0 ? FormatUtils.formatBitrate(vBitrate)
+                    : streamBitrate > 0 ? FormatUtils.formatBitrate(streamBitrate) : null;
+            if (vBr != null) addInfoRow(infoText, "码率", vBr, density);
+            if (streamVBitDepth > 0) addInfoRow(infoText, "色深", streamVBitDepth + "bit", density);
+            if (streamVHdr || playerView.isHdrVideo()) addInfoRow(infoText, "动态范围", "HDR10", density);
+            addInfoRow(infoText, "解码", actualVideoDecoder.isEmpty() ? (isHwDecode ? "硬解" : "软解") : actualVideoDecoder, density);
         }
-        if (infoTextAudio != null) infoTextAudio.setText(a.toString());
 
-        // 额外信息（字幕、音轨、时长）
-        StringBuilder x = new StringBuilder();
-        // 额外音轨
-        if (streamAudioTracks != null && streamAudioTracks.size() > 1) {
-            for (int i = 1; i < streamAudioTracks.size(); i++) {
-                StreamResponse.AudioStreamInfo asi = streamAudioTracks.get(i);
-                String an = FormatUtils.fmtAudioCodec(asi.codecName);
-                String al = asi.language != null && !asi.language.isEmpty() ? asi.language : "";
-                String ach = asi.channels > 0 ? (asi.channels == 8 ? "7.1" : asi.channels == 6 ? "5.1" : asi.channels + "ch") : "?";
-                String ab = asi.bps > 0 ? " " + FormatUtils.formatBitrate(asi.bps) : "";
-                x.append("音轨").append(i + 1).append(" ").append(an);
-                if (!al.isEmpty()) x.append(" ").append(al);
-                x.append(" ").append(ach).append(ab).append("  ");
+        // ---- 音频分组 ----
+        if (infoTextAudio != null) {
+            infoTextAudio.removeAllViews();
+            if (mpvACodec != null && !mpvACodec.isEmpty()) {
+                addInfoRow(infoTextAudio, "编码", FormatUtils.fmtAudioCodec(mpvACodec), density);
+                int ch = playerView.getPropertyIntSafe("audio-params/channel-count", 0);
+                addInfoRow(infoTextAudio, "声道", ch > 0 ? (ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch") : "?", density);
+                int sr = playerView.getPropertyIntSafe("audio-params/samplerate", 0);
+                addInfoRow(infoTextAudio, "采样", sr > 0 ? sr + "Hz" : "?", density);
+                int aBitrate = playerView.getPropertyIntSafe("audio-bitrate", 0);
+                if (aBitrate > 0) addInfoRow(infoTextAudio, "码率", aBitrate / 1000 + "kbps", density);
+                addInfoRow(infoTextAudio, "解码", actualAudioDecoder.isEmpty() ? (isHwDecode ? "硬解" : "软解") : actualAudioDecoder, density);
+                // 显示用户选择的音轨（如有）
+                String selAudio = cloudStreamManager != null ? cloudStreamManager.getLastAudioTrackLabel() : "";
+                if (!selAudio.isEmpty() && !selAudio.equals("默认")) {
+                    addInfoRow(infoTextAudio, "已选", selAudio, density);
+                }
+            } else {
+                addInfoRow(infoTextAudio, "音轨", "无音轨", density);
             }
         }
-        // 字幕
-        if (streamSubtitleTracks != null && !streamSubtitleTracks.isEmpty()) {
-            if (x.length() > 0) x.append("\n");
-            x.append("字幕 ");
-            for (int i = 0; i < streamSubtitleTracks.size(); i++) {
-                StreamResponse.SubtitleStreamInfo sub = streamSubtitleTracks.get(i);
-                if (i > 0) x.append("  ");
-                String sf = sub.codecName != null ? sub.codecName.toUpperCase() : "?";
-                String lang = sub.language != null && !sub.language.isEmpty() ? sub.language : "?";
-                String def = sub.isDefault != 0 ? "[默认]" : "";
-                x.append(sf).append(" ").append(lang).append(def);
+
+        // ---- 其他分组（额外音轨 / 字幕轨 / 时长） ----
+        if (infoTextExtra != null) {
+            infoTextExtra.removeAllViews();
+            // 额外音轨
+            if (streamAudioTracks != null && streamAudioTracks.size() > 1) {
+                StringBuilder a = new StringBuilder();
+                for (int i = 1; i < streamAudioTracks.size(); i++) {
+                    StreamResponse.AudioStreamInfo asi = streamAudioTracks.get(i);
+                    String an = FormatUtils.fmtAudioCodec(asi.codecName);
+                    String al = asi.language != null && !asi.language.isEmpty() ? asi.language : "";
+                    String ach = asi.channels > 0 ? (asi.channels == 8 ? "7.1" : asi.channels == 6 ? "5.1" : asi.channels + "ch") : "?";
+                    String ab = asi.bps > 0 ? " " + FormatUtils.formatBitrate(asi.bps) : "";
+                    if (a.length() > 0) a.append("\n");
+                    a.append("音轨").append(i + 1).append("  ").append(an);
+                    if (!al.isEmpty()) a.append(" ").append(al);
+                    a.append(" ").append(ach).append(ab);
+                }
+                addInfoLine(infoTextExtra, a.toString(), density);
+            }
+            // 字幕
+            if (streamSubtitleTracks != null && !streamSubtitleTracks.isEmpty()) {
+                StringBuilder s = new StringBuilder();
+                for (int i = 0; i < streamSubtitleTracks.size(); i++) {
+                    StreamResponse.SubtitleStreamInfo sub = streamSubtitleTracks.get(i);
+                    if (s.length() > 0) s.append("\n");
+                    String sf = sub.codecName != null ? sub.codecName.toUpperCase() : "?";
+                    String lang = sub.language != null && !sub.language.isEmpty() ? sub.language : "?";
+                    String def = sub.isDefault != 0 ? " [默认]" : "";
+                    s.append("字幕").append(i + 1).append("  ").append(sf).append(" ").append(lang).append(def);
+                }
+                addInfoLine(infoTextExtra, s.toString(), density);
+            }
+            // 时长
+            long durMs = playerView.getDuration();
+            if (durMs > 0) {
+                addInfoRow(infoTextExtra, "时长", FormatUtils.fmtTime((int) (durMs / 1000)), density);
+            }
+            if (infoTextExtra.getChildCount() == 0) {
+                addInfoLine(infoTextExtra, "（无额外轨道信息）", density);
             }
         }
-        // 时长
-        long durMs = playerView.getDuration();
-        if (durMs > 0) {
-            if (x.length() > 0) x.append("\n");
-            x.append("时长 ").append(FormatUtils.fmtTime((int)(durMs/1000)));
-        }
-        if (infoTextExtra != null) infoTextExtra.setText(x.toString());
     }
 
     // ========== 弹幕全部移至 DanmuManager ==========
@@ -2613,7 +2597,8 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
             return true;
         }
 
-        // 面板优先处理：设置面板/弹幕面板/字幕面板打开时，BACK 键关闭对应面板
+        // 面板优先处理：设置面板/弹幕抽屉打开时，BACK 键关闭对应面板
+        // （跳过/字幕/信息抽屉是独立 Dialog，BACK 由系统 Dialog 自行处理）
         if (settingsPanelManager != null) {
             if (settingsPanelManager.isSettingsPanelOpen() && (k == KeyEvent.KEYCODE_BACK)) {
                 settingsPanelManager.closeSettingsPanel();
@@ -2623,17 +2608,13 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
                 settingsPanelManager.closeDanmuPanel();
                 return true;
             }
-            if (settingsPanelManager.isSubtitlePanelOpen() && (k == KeyEvent.KEYCODE_BACK)) {
-                settingsPanelManager.closeSubtitlePanel();
-                return true;
-            }
         }
         if (ctrlVis) {
             switch (k) {
                 case KeyEvent.KEYCODE_BACK:
                     if (infoDrawer != null && infoDrawer.isShowing()) { toggleInfo(); return true; }
                     // 有控件焦点 → 清掉，自动回退到 playerView
-                    if (controller.hasFocus() || btnDanmu.hasFocus() || btnLock.hasFocus() || btnCloudMode.hasFocus() || btnBrightness.hasFocus() || btnSkip.hasFocus() || topBar.hasFocus() || btnBack.hasFocus()) {
+                    if (controller.hasFocus() || btnDanmu.hasFocus() || btnLock.hasFocus() || btnCloudMode.hasFocus() || btnBrightness.hasFocus() || topBar.hasFocus() || btnBack.hasFocus()) {
                         topBar.clearFocus();
                         controller.clearFocus();
                         btnDanmu.clearFocus();
@@ -2647,7 +2628,7 @@ public class PlayerActivity extends AppCompatActivity implements MPVTimeSource {
                 case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER:
                     if (seekBar.hasFocus() || btnRewind.hasFocus() || btnForward.hasFocus()
                             || btnSpeed.hasFocus() || btnRatio.hasFocus() || btnInfo.hasFocus()
-                            || btnEpisodeList.hasFocus() || btnBrightness.hasFocus() || btnSkip.hasFocus()) {
+                            || btnEpisodeList.hasFocus() || btnBrightness.hasFocus()) {
                         return true;
                     }
                     togglePlay(); return true;

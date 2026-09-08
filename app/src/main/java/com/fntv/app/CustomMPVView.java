@@ -582,6 +582,24 @@ public class CustomMPVView extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
+    /**
+     * 设置视频渲染边距（占窗口宽/高的比例），mpv 会在扣掉边距后的区域内铺视频。
+     * 用于把画面限制在"屏幕减去刘海/导航栏 inset"的可视区内，使默认"适应"模式下
+     * 16:9 视频在全面屏上左右不再出现黑边，同时不占用刘海和手势导航条区域。
+     *
+     * @param left   左边距比例（0~1）
+     * @param top    上边距比例（0~1）
+     * @param right  右边距比例（0~1）
+     * @param bottom 下边距比例（0~1）
+     */
+    public void setVideoMarginRatio(double left, double top, double right, double bottom) {
+        if (!mpvInitialized) return;
+        MPVLib.setPropertyDouble("video-margin-ratio-left", left);
+        MPVLib.setPropertyDouble("video-margin-ratio-top", top);
+        MPVLib.setPropertyDouble("video-margin-ratio-right", right);
+        MPVLib.setPropertyDouble("video-margin-ratio-bottom", bottom);
+    }
+
     /** mpv track-list 中的一条轨道信息 */
     public static class TrackInfo {
         /** mpv 轨道 ID（写入 aid / sid 时使用） */
