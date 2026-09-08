@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_update_dialog"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="更新下载源"
+        android:textColor="@color/text_primary"
+        android:textSize="21sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvSourceHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="正在同时测试全部来源，速度会实时更新"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <RadioGroup
+        android:id="@+id/sourceGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="vertical" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnSourceCancel"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_update_button_secondary"
+            android:focusable="true"
+            android:nextFocusRight="@id/btnSourceSave"
+            android:text="取消"
+            android:textAllCaps="false"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnSourceSave"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_primary"
+            android:focusable="true"
+            android:nextFocusLeft="@id/btnSourceCancel"
+            android:text="保存选择"
+            android:textAllCaps="false"
+            android:textColor="@color/text_white"
+            android:textSize="14sp" />
+    </LinearLayout>
+</LinearLayout>

@@ -19,6 +19,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -254,8 +255,20 @@ public class HomeActivity extends AppCompatActivity {
 
         // 检查更新
         Button btnCheckUpdate = findViewById(R.id.btnCheckUpdate);
+        TextView tvUpdateSource = findViewById(R.id.tvUpdateSource);
+        View rlUpdateSource = findViewById(R.id.rlUpdateSource);
+        View rlAutoCheckUpdate = findViewById(R.id.rlAutoCheckUpdate);
+        SwitchCompat switchAutoCheckUpdate = findViewById(R.id.switchAutoCheckUpdate);
         updateManager = new UpdateManager(this, btnCheckUpdate, BuildConfig.VERSION_CODE);
         updateManager.setup();
+        tvUpdateSource.setText(updateManager.getSelectedSourceName());
+        rlUpdateSource.setOnClickListener(v -> updateManager.showDownloadSourceDialog(
+                () -> tvUpdateSource.setText(updateManager.getSelectedSourceName())));
+        switchAutoCheckUpdate.setChecked(prefs.getBoolean(UpdateManager.PREF_AUTO_CHECK_UPDATE, true));
+        switchAutoCheckUpdate.setOnCheckedChangeListener((button, checked) ->
+                prefs.edit().putBoolean(UpdateManager.PREF_AUTO_CHECK_UPDATE, checked).apply());
+        rlAutoCheckUpdate.setOnClickListener(v -> switchAutoCheckUpdate.setChecked(!switchAutoCheckUpdate.isChecked()));
+        updateManager.checkUpdateAutomatically();
     }
 
 
@@ -284,6 +297,11 @@ public class HomeActivity extends AppCompatActivity {
         } else if (currentTab == 0 && !overviewBuilt && showingOverview) {
             loadOverview();
         }
+    }
+    @Override
+    protected void onDestroy() {
+        if (updateManager != null) updateManager.release();
+        super.onDestroy();
     }
 
 

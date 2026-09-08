@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(0, 4, 0, 0);
 
-        String hostHint = isFnId ? "输入 FN ID（如 a123456789）" : "例如 http://192.168.1.1:5666";
+        String hostHint = isFnId ? "输入 FN ID（如 a123456789）" : "例如 http://127.0.0.1:5666";
         int hostInputType = isFnId
                 ? android.text.InputType.TYPE_CLASS_TEXT
                 : android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI;
@@ -389,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
             fnidRememberCb.setChecked(rem);
             fnidPassEt.setText(rem ? prefs.getString("fnid_pass", "") : "");
         } else {
-            httpHostEt.setText(prefs.getString("host", "http://192.168.10.158:5666"));
+            httpHostEt.setText(prefs.getString("host", "http://127.0.0.1:5666"));
             httpUserEt.setText(prefs.getString("user", "video"));
             boolean rem = prefs.getBoolean("remember", false);
             httpRememberCb.setChecked(rem);

@@ -70,7 +70,7 @@
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_input"
                 android:focusable="true"
-                android:hint="例如 http://192.168.1.1:5666"
+                android:hint="例如 http://127.0.0.1:5666"
                 android:textColorHint="@color/text_hint"
                 android:imeOptions="actionNext"
                 android:inputType="textUri"

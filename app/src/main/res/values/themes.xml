@@ -25,6 +25,15 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
     </style>
 
+    <style name="UpdateDialog" parent="android:Theme.DeviceDefault.Dialog.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.62</item>
+        <item name="android:windowMinWidthMajor">82%</item>
+        <item name="android:windowMinWidthMinor">92%</item>
+    </style>
+
     <!-- 遥控器焦点高亮：配合 ?attr/selectableItemBackground 默认有涟漪/高亮 -->
 
     <!-- 右侧抽屉式二级菜单窗口：透明背景 + 半屏压暗 + 从右滑入 -->

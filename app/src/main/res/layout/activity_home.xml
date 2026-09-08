@@ -797,13 +797,81 @@
                             android:textSize="12sp"
                             android:lineSpacingExtra="3dp" />
 
+                        <RelativeLayout
+                            android:id="@+id/rlUpdateSource"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/setting_row_height"
+                            android:layout_marginTop="16dp"
+                            android:background="@drawable/bg_settings_item"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:nextFocusDown="@id/rlAutoCheckUpdate"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerVertical="true"
+                                android:text="更新下载源"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/tvUpdateSource"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:maxWidth="160dp"
+                                android:ellipsize="end"
+                                android:singleLine="true"
+                                android:text="自动选择"
+                                android:textColor="@color/accent_light"
+                                android:textSize="12sp" />
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:id="@+id/rlAutoCheckUpdate"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/setting_row_height"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_settings_item"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:nextFocusDown="@id/btnCheckUpdate"
+                            android:nextFocusUp="@id/rlUpdateSource"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerVertical="true"
+                                android:text="打开 App 后自动检查更新"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp" />
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/switchAutoCheckUpdate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:focusable="true"
+                                android:checked="true" />
+
+                        </RelativeLayout>
+
                         <Button
                             android:id="@+id/btnCheckUpdate"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:layout_marginTop="16dp"
+                            android:layout_marginTop="10dp"
                             android:background="@drawable/bg_btn_primary"
                             android:focusable="true"
+                            android:nextFocusUp="@id/rlAutoCheckUpdate"
                             android:text="检查更新"
                             android:textAllCaps="false"
                             android:textColor="@color/text_white"
